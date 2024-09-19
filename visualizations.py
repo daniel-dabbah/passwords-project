@@ -2,7 +2,14 @@ import password_statistics as ps
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import os
 
+def save_plot(dataset_name, plot_name):
+    """ Save the plot to the generated_plots directory """
+    os.makedirs("generated_plots", exist_ok=True)
+    os.makedirs(os.path.join("generated_plots", dataset_name), exist_ok=True)
+    plt.savefig(os.path.join("generated_plots", dataset_name, f"{plot_name}.png"))
+    plt.close()
 
 def print_statistics(statistics):
     """ Print dome of the statistics of the passwords """
@@ -29,7 +36,7 @@ def print_statistics(statistics):
     print(f"Upper Case Only at Beginning: {statistics['upper_case_only_beginning_percentage']:.2f}%"),
     print(f"Numbers Only at end: {statistics['numbers_only_at_end_percentage']:.2f}%")
 
-def plot_password_length_histogram(length_percentages):
+def plot_password_length_histogram(length_percentages,dataset_name):
     """ Plot the password length histogram """
     lengths = list(length_percentages.keys())
     percentages = list(length_percentages.values())
@@ -40,9 +47,11 @@ def plot_password_length_histogram(length_percentages):
     plt.title('Password Length Distribution')
     plt.xticks(lengths)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    
+    save_plot(dataset_name, "plot_password_length_histogram")  # Close the figure to free up memory
 
-def plot_ascii_usage_histogram(ascii_counts):
+def plot_ascii_usage_histogram(ascii_counts,dataset_name):
     """ Plot the ASCII usage histogram """
     chars = list(ascii_counts.keys())
     percentages = list(ascii_counts.values()) 
@@ -52,9 +61,10 @@ def plot_ascii_usage_histogram(ascii_counts):
     plt.ylabel('Percentage')
     plt.title('ASCII Character Usage in Passwords')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
-
-def plot_year_histogram(year_counts):
+    # plt.show()
+    save_plot(dataset_name, "plot_ascii_usage_histogram") 
+    
+def plot_year_histogram(year_counts,dataset_name):
     """ Plot the year histogram """
     years = list(year_counts.keys())
     counts = list(year_counts.values())
@@ -64,10 +74,12 @@ def plot_year_histogram(year_counts):
     plt.ylabel('Counts')
     plt.title('Year Usage in Passwords')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_year_histogram") 
+   
 
 
-def number_position_violin_plot(number_positions):
+def number_position_violin_plot(number_positions, dataset_name):
     """ Plot the position of numbers in passwords """
     number_plot_df = pd.DataFrame(number_positions, columns=['Total length of password', 'Normalized Position'])
     single_color = "skyblue"    
@@ -75,9 +87,10 @@ def number_position_violin_plot(number_positions):
     sns.violinplot(x='Total length of password', y='Normalized Position', data=number_plot_df, bw_method=0.2, inner=None, density_norm='width', color=single_color)
     plt.title('Position of Numbers in Passwords by Length')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_number_position_violin_plot")
 
-def special_character_position_violin_plot(special_char_positions):
+def special_character_position_violin_plot(special_char_positions, dataset_name):
     """ Plot the position of special characters in passwords """
     special_char_plot_df = pd.DataFrame(special_char_positions, columns=['Total length of password', 'Normalized Position'])
     single_color = "skyblue"
@@ -85,10 +98,11 @@ def special_character_position_violin_plot(special_char_positions):
     sns.violinplot(x='Total length of password', y='Normalized Position', data=special_char_plot_df, bw_method=0.2, inner=None, density_norm='width', color=single_color)
     plt.title('Position of Special Characters in Passwords by Length')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_special_character_position_violin_plot")
 
 
-def special_character_position_violin_plot_for_specific_characters(special_char_positions, char):
+def special_character_position_violin_plot_for_specific_characters(special_char_positions, char,dataset_name):
     """ Plot the position of a specific char in passwords """
     special_char_plot_df = pd.DataFrame(special_char_positions, columns=['Total length of password', 'Normalized Position'])
     single_color = "skyblue"
@@ -96,10 +110,11 @@ def special_character_position_violin_plot_for_specific_characters(special_char_
     sns.violinplot(x='Total length of password', y='Normalized Position', data=special_char_plot_df, bw_method=0.1, inner=None, density_norm='width', color=single_color)
     plt.title(f'Position of "{char}" Special Character in Passwords by Length')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_special_character_position_violin_plot_for_specific_characters")
 
 
-def plot_count_of_special_characters_by_length(special_char_counts, length):
+def plot_count_of_special_characters_by_length(special_char_counts, length,dataset_name):
     """ Plot the count of special characters in passwords of different lengths """
     special_chars = list(special_char_counts.keys())
     counts = list(special_char_counts.values())
@@ -109,10 +124,11 @@ def plot_count_of_special_characters_by_length(special_char_counts, length):
     plt.ylabel('Counts')
     plt.title('Special Character Usage in Passwords of length {}'.format(length))
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_count_of_special_characters_by_length")
 
 
-def plot_count_of_numbers_by_length(numbers_counts, length):
+def plot_count_of_numbers_by_length(numbers_counts, length,dataset_name):
     """ Plot the count of numbers in passwords of different lengths """
     numbers = list(numbers_counts.keys())
     counts = list(numbers_counts.values())
@@ -122,10 +138,11 @@ def plot_count_of_numbers_by_length(numbers_counts, length):
     plt.ylabel('Counts')
     plt.title('Number Usage in Passwords of length {}'.format(length))
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_count_of_numbers_by_length")
 
 
-def plot_count_of_upper_case_by_length(upper_case_counts, length):
+def plot_count_of_upper_case_by_length(upper_case_counts, length,dataset_name):
     """ Plot the count of upper case characters in passwords of different lengths """
     upper_case = list(upper_case_counts.keys())
     counts = list(upper_case_counts.values())
@@ -135,10 +152,11 @@ def plot_count_of_upper_case_by_length(upper_case_counts, length):
     plt.ylabel('Counts')
     plt.title('Upper Case Usage in Passwords of length {}'.format(length))
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_count_of_upper_case_by_length")
 
 
-def plot_count_of_lower_case_by_length(lower_case_counts, length):
+def plot_count_of_lower_case_by_length(lower_case_counts, length,dataset_name):
     """ Plot the count of lower case characters in passwords of different lengths """
     lower_case = list(lower_case_counts.keys())
     counts = list(lower_case_counts.values())
@@ -148,10 +166,11 @@ def plot_count_of_lower_case_by_length(lower_case_counts, length):
     plt.ylabel('Counts')
     plt.title('Lower Case Usage in Passwords of length {}'.format(length))
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_count_of_lower_case_by_length")
 
 
-def plot_categories_bar_plot(statistics):
+def plot_categories_bar_plot(statistics,dataset_name):
     labels = ["Contains Lower Case", "Contains Upper Case", "Contains Numbers", "Contains Special",
     "Lower Case Only", "Upper Case Only", "Numbers Only", "Special Only",
     "Lower and Numbers", "Lower and Special", "Lower and Upper",
@@ -178,10 +197,11 @@ def plot_categories_bar_plot(statistics):
     plt.yticks(fontsize=12)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_categories_bar_plot")
 
 
-def plot_categories_pie_plot_via_matplotlib(statistics):
+def plot_categories_pie_plot_via_matplotlib(statistics,dataset_name):
     """ Plot the categories pie plot using matplotlib """
     labels = [
         "Lower Case Only", "Upper Case Only", "Numbers Only", 
@@ -234,9 +254,10 @@ def plot_categories_pie_plot_via_matplotlib(statistics):
             autotext.set_fontsize(6)
         else:
             autotext.set_fontsize(8)
-    plt.show()
+    # plt.show()
+    save_plot(dataset_name, "plot_categories_pie_plot_via_matplotlib")
 
-def plot_categories_pie_plot_via_plotly(statistics):
+def plot_categories_pie_plot_via_plotly(statistics,dataset_name):
     """ Plot the categories pie plot using plotly """
     labels = [
         "Lower Case Only", "Upper Case Only", "Numbers Only", 
@@ -302,26 +323,37 @@ def plot_categories_pie_plot_via_plotly(statistics):
         ),
         margin=dict(t=100, b=100, l=50, r=20),
     )
-    fig.show()
+    # fig.show()
+  
 
 if __name__ == '__main__':
-    passwords, statistics = ps.analyze_passwords('rockyou2024-100K.txt')
+
+    # Create the directory if it doesn't exist
+    os.makedirs('generated_plots', exist_ok=True)
+
+    #TODO: change to rockyuoi 2024-100K.txt
+    dataset_name = 'rockyou_mini.txt'
+    dataset_path = f"DataSets/{dataset_name}"
+    passwords, statistics = ps.analyze_passwords(dataset_path)
     print_statistics(statistics)
     
-    plot_password_length_histogram(statistics['length_percentages'])
-    plot_ascii_usage_histogram(statistics['ascii_counts'])
-    plot_categories_bar_plot(statistics)
-    plot_categories_pie_plot_via_matplotlib(statistics)
-    plot_categories_pie_plot_via_plotly(statistics)
+    plot_password_length_histogram(statistics['length_percentages'], dataset_name)
+    plot_ascii_usage_histogram(statistics['ascii_counts'], dataset_name)
+    plot_categories_bar_plot(statistics, dataset_name)
+    plot_categories_pie_plot_via_matplotlib(statistics, dataset_name)
+    plot_categories_pie_plot_via_plotly(statistics, dataset_name)
 
-    number_position_violin_plot(statistics['number_positions'])
-    special_character_position_violin_plot(statistics['special_char_positions'])
-    special_character_position_violin_plot_for_specific_characters(statistics['special_char_positions_per_char']['.'],'.')
-    plot_year_histogram(statistics['year_counts'])
+    number_position_violin_plot(statistics['number_positions'], dataset_name)
+    special_character_position_violin_plot(statistics['special_char_positions'], dataset_name)
+    special_character_position_violin_plot_for_specific_characters(statistics['special_char_positions_per_char']['.'], '.', dataset_name)
+    plot_year_histogram(statistics['year_counts'], dataset_name)
 
-    plot_count_of_special_characters_by_length(statistics['count_of_special_characters_per_length_per_count_percentages'][8], 8)
-    plot_count_of_numbers_by_length(statistics['count_of_numbers_per_length_per_count_percentages'][8], 8)
-    plot_count_of_upper_case_by_length(statistics['count_of_upper_case_per_length_per_count_percentages'][8], 8)
-    plot_count_of_lower_case_by_length(statistics['count_of_lower_case_per_length_per_count_percentages'][8], 8)
+    plot_count_of_special_characters_by_length(statistics['count_of_special_characters_per_length_per_count_percentages'][8], 8, dataset_name)
+    plot_count_of_numbers_by_length(statistics['count_of_numbers_per_length_per_count_percentages'][8], 8, dataset_name)
+    plot_count_of_upper_case_by_length(statistics['count_of_upper_case_per_length_per_count_percentages'][8], 8, dataset_name)
+    plot_count_of_lower_case_by_length(statistics['count_of_lower_case_per_length_per_count_percentages'][8], 8, dataset_name)
+
     
     
+    
+
