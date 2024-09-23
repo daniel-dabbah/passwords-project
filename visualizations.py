@@ -1,8 +1,15 @@
+from collections import defaultdict
+
+from tqdm import tqdm
 import password_statistics as ps
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import os
+import numpy as np
+import string
+import password_statistics as ps
+
 
 def save_plot(dataset_name, plot_name):
     """ Save the plot to the generated_plots directory """
@@ -76,7 +83,6 @@ def plot_year_histogram(year_counts,dataset_name):
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     # plt.show()
     save_plot(dataset_name, "plot_year_histogram") 
-   
 
 
 def number_position_violin_plot(number_positions, dataset_name):
@@ -199,6 +205,62 @@ def plot_categories_bar_plot(statistics,dataset_name):
     plt.tight_layout()
     # plt.show()
     save_plot(dataset_name, "plot_categories_bar_plot")
+
+def plot_percentage_of_special_characters_by_length(special_char_counts, length, dataset_name):
+    """ Plot the percentage of special characters in passwords of different lengths """
+    special_chars = list(special_char_counts.keys())
+    total_counts = sum(special_char_counts.values())
+    percentages = [(count / total_counts) * 100 if total_counts > 0 else 0 for count in special_char_counts.values()]
+    plt.figure(figsize=(10, 5))
+    plt.bar(special_chars, percentages, color='orange', alpha=0.7)
+    plt.xlabel('Special Character')
+    plt.ylabel('Percentage (%)')
+    plt.title(f'Special Character Usage as Percentage in Passwords of length {length}')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot(dataset_name, f"percentage_of_special_characters_by_length_{length}")
+    plt.close()
+
+def plot_percentage_of_numbers_by_length(numbers_counts, length, dataset_name):
+    """ Plot the percentage of numbers in passwords of different lengths """
+    numbers = list(numbers_counts.keys())
+    total_counts = sum(numbers_counts.values())
+    percentages = [(count / total_counts) * 100 if total_counts > 0 else 0 for count in numbers_counts.values()]
+    plt.figure(figsize=(10, 5))
+    plt.bar(numbers, percentages, color='orange', alpha=0.7)
+    plt.xlabel('Number')
+    plt.ylabel('Percentage (%)')
+    plt.title(f'Number Usage as Percentage in Passwords of length {length}')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot(dataset_name, f"percentage_of_numbers_by_length_{length}")
+    plt.close()
+
+def plot_percentage_of_upper_case_by_length(upper_case_counts, length, dataset_name):
+    """ Plot the percentage of upper case characters in passwords of different lengths """
+    upper_case = list(upper_case_counts.keys())
+    total_counts = sum(upper_case_counts.values())
+    percentages = [(count / total_counts) * 100 if total_counts > 0 else 0 for count in upper_case_counts.values()]
+    plt.figure(figsize=(10, 5))
+    plt.bar(upper_case, percentages, color='orange', alpha=0.7)
+    plt.xlabel('Upper Case')
+    plt.ylabel('Percentage (%)')
+    plt.title(f'Upper Case Usage as Percentage in Passwords of length {length}')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot(dataset_name, f"percentage_of_upper_case_by_length_{length}")
+    plt.close()
+
+def plot_percentage_of_lower_case_by_length(lower_case_counts, length, dataset_name):
+    """ Plot the percentage of lower case characters in passwords of different lengths """
+    lower_case = list(lower_case_counts.keys())
+    total_counts = sum(lower_case_counts.values())
+    percentages = [(count / total_counts) * 100 if total_counts > 0 else 0 for count in lower_case_counts.values()]
+    plt.figure(figsize=(10, 5))
+    plt.bar(lower_case, percentages, color='orange', alpha=0.7)
+    plt.xlabel('Lower Case')
+    plt.ylabel('Percentage (%)')
+    plt.title(f'Lower Case Usage as Percentage in Passwords of length {length}')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot(dataset_name, f"percentage_of_lower_case_by_length_{length}")
+    plt.close()
 
 
 def plot_categories_pie_plot_via_matplotlib(statistics,dataset_name):
@@ -324,7 +386,61 @@ def plot_categories_pie_plot_via_plotly(statistics,dataset_name):
         margin=dict(t=100, b=100, l=50, r=20),
     )
     # fig.show()
-  
+
+def plot_entropy_histogram(entropies, dataset_name):
+    """ Plot the histogram of all entropies """
+    plt.figure(figsize=(10, 5))
+    plt.hist(entropies, bins=20, color='blue', alpha=0.7)
+    plt.xlabel('Entropy (bits)')
+    plt.ylabel('Frequency')
+    plt.title('Entropy Distribution of All Passwords')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot(dataset_name, "entropy_histogram")
+    plt.close()
+
+def plot_entropy__percentages_histogram(entropies, dataset_name):
+    """ Plot the histogram of all entropies showing percentages instead of frequencies. """
+    plt.figure(figsize=(10, 5))
+    # Plot histogram with density=True to get the probability density, then multiply by 100 to get percentages
+    n, bins, patches = plt.hist(entropies, bins=50, color='blue', alpha=0.7, density=True, weights=np.ones(len(entropies)) / len(entropies))
+    plt.gca().yaxis.set_major_formatter(plt.matplotlib.ticker.PercentFormatter(1))  # This converts y-axis into percentage
+    plt.xlabel('Entropy (bits)')
+    plt.ylabel('Percentage of Passwords (%)')
+    plt.title('Entropy Distribution of All Passwords (Percentage)')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot(dataset_name, "entropy_histogram_percentage")
+    plt.close()
+
+def plot_entropy_by_length_histogram(entropy_by_length, length, dataset_name):
+    """ Plot the histogram of entropies for a specific password length """
+    plt.figure(figsize=(10, 5))
+    plt.hist(entropy_by_length, bins=20, color='green', alpha=0.7)
+    plt.xlabel('Entropy (bits)')
+    plt.ylabel('Frequency')
+    plt.title(f'Entropy Distribution for Passwords of Length {length}')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot(dataset_name, f"entropy_histogram_length_{length}")
+    plt.close()
+    
+
+def plot_entropy_by_length_percentages_histogram(entropies, length, dataset_name):
+    """Plot the histogram of entropies for a specific password length with percentages."""
+    plt.figure(figsize=(10, 5))
+    # Plot histogram without density=True to get raw counts
+    n, bins, patches = plt.hist(entropies, bins=20, color='green', alpha=0.7)
+    total = sum(n)  # Sum of counts in all bins, which is total passwords of that length
+    n_percentage = [(x / total) * 100 for x in n]  # Convert counts to percentages
+    plt.cla()  # Clear the plot
+    # Replot with percentage data
+    plt.bar(bins[:-1], n_percentage, width=np.diff(bins), color='green', alpha=0.7, align='edge')
+    plt.gca().yaxis.set_major_formatter(plt.matplotlib.ticker.PercentFormatter())  # Now percentages will show correctly
+    plt.xlabel('Entropy (bits)')
+    plt.ylabel('Percentage of Passwords (%)')
+    plt.title(f'Entropy Distribution (Percentage) for Passwords of Length {length}')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot(dataset_name, f"percentage_entropy_histogram_length_{length}")
+    plt.close()
+
 
 if __name__ == '__main__':
 
@@ -333,27 +449,63 @@ if __name__ == '__main__':
 
     #TODO: change to rockyuoi 2024-100K.txt
     dataset_name = 'rockyou_mini.txt'
-    dataset_path = f"DataSets/{dataset_name}"
-    passwords, statistics = ps.analyze_passwords(dataset_path)
-    print_statistics(statistics)
+    passwords, statistics = ps.analyze_passwords(dataset_name)
+
+    """ Print some of the statistics of the passwords """
+    # print_statistics(statistics)
     
+    """ Plot the password length histogram """
     plot_password_length_histogram(statistics['length_percentages'], dataset_name)
+
+    """ Plot the ASCII usage histogram """
     plot_ascii_usage_histogram(statistics['ascii_counts'], dataset_name)
+
+    """ Plot Categories """
     plot_categories_bar_plot(statistics, dataset_name)
     plot_categories_pie_plot_via_matplotlib(statistics, dataset_name)
     plot_categories_pie_plot_via_plotly(statistics, dataset_name)
 
+    """ Plot the position of lower, upper, numbers and special chars in all passwords """
     number_position_violin_plot(statistics['number_positions'], dataset_name)
     special_character_position_violin_plot(statistics['special_char_positions'], dataset_name)
+
+    """ Plot the position of special characters in passwords for specific characters """
     special_character_position_violin_plot_for_specific_characters(statistics['special_char_positions_per_char']['.'], '.', dataset_name)
+    special_character_position_violin_plot_for_specific_characters(statistics['special_char_positions_per_char']['!'], '!', dataset_name)
+    special_character_position_violin_plot_for_specific_characters(statistics['special_char_positions_per_char']['@'], '@', dataset_name)
+    special_character_position_violin_plot_for_specific_characters(statistics['special_char_positions_per_char']['#'], '#', dataset_name)
+    special_character_position_violin_plot_for_specific_characters(statistics['special_char_positions_per_char']['$'], '$', dataset_name)
+    special_character_position_violin_plot_for_specific_characters(statistics['special_char_positions_per_char']['%'], '%', dataset_name)
+
+    """ Plot year histogram """
     plot_year_histogram(statistics['year_counts'], dataset_name)
 
-    plot_count_of_special_characters_by_length(statistics['count_of_special_characters_per_length_per_count_percentages'][8], 8, dataset_name)
-    plot_count_of_numbers_by_length(statistics['count_of_numbers_per_length_per_count_percentages'][8], 8, dataset_name)
-    plot_count_of_upper_case_by_length(statistics['count_of_upper_case_per_length_per_count_percentages'][8], 8, dataset_name)
-    plot_count_of_lower_case_by_length(statistics['count_of_lower_case_per_length_per_count_percentages'][8], 8, dataset_name)
+    """ Plot the count of special characters, numbers, upper case and lower case characters in passwords of different lengths """
+    plot_percentage_of_special_characters_by_length(statistics['count_of_special_characters_per_length_per_count_percentages'][8], 8, dataset_name)
+    plot_percentage_of_numbers_by_length(statistics['count_of_numbers_per_length_per_count_percentages'][8], 8, dataset_name)
+    plot_percentage_of_upper_case_by_length(statistics['count_of_upper_case_per_length_per_count_percentages'][8], 8, dataset_name)
+    
+    plot_percentage_of_special_characters_by_length(statistics['count_of_special_characters_per_length_per_count_percentages'][9], 9, dataset_name)
+    plot_percentage_of_numbers_by_length(statistics['count_of_numbers_per_length_per_count_percentages'][9], 9, dataset_name)
+    plot_percentage_of_upper_case_by_length(statistics['count_of_upper_case_per_length_per_count_percentages'][9], 9, dataset_name)
+
+    plot_percentage_of_special_characters_by_length(statistics['count_of_special_characters_per_length_per_count_percentages'][10], 10, dataset_name)
+    plot_percentage_of_numbers_by_length(statistics['count_of_numbers_per_length_per_count_percentages'][10], 10, dataset_name)
+    plot_percentage_of_upper_case_by_length(statistics['count_of_upper_case_per_length_per_count_percentages'][10], 10, dataset_name)
+
+    plot_percentage_of_special_characters_by_length(statistics['count_of_special_characters_per_length_per_count_percentages'][11], 11, dataset_name)
+    plot_percentage_of_numbers_by_length(statistics['count_of_numbers_per_length_per_count_percentages'][11], 11, dataset_name)
+    plot_percentage_of_upper_case_by_length(statistics['count_of_upper_case_per_length_per_count_percentages'][11], 11, dataset_name)
+
+    plot_percentage_of_special_characters_by_length(statistics['count_of_special_characters_per_length_per_count_percentages'][12], 12, dataset_name)
+    plot_percentage_of_numbers_by_length(statistics['count_of_numbers_per_length_per_count_percentages'][12], 12, dataset_name)
+    plot_percentage_of_upper_case_by_length(statistics['count_of_upper_case_per_length_per_count_percentages'][12], 12, dataset_name)
+
+    """ Plot entropy histograms """
+    entropy = statistics['entropies']
+    entropy_by_length = statistics['entropy_by_length']
+    plot_entropy__percentages_histogram(entropy, dataset_name)
+    plot_entropy_by_length_percentages_histogram(entropy_by_length[8], 8, dataset_name)
 
     
     
-    
-

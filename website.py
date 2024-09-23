@@ -1,8 +1,11 @@
+
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 from PIL import Image
+from website_static_clusters import static_clusters_page
+from website_dynamic_clusters import dynamic_clusters_page
 
 
 def main():
@@ -11,7 +14,7 @@ def main():
 
     # Sidebar with page options
     page = st.sidebar.radio(
-        'Choose a Page', ['Password Analysis: A Visual Dashboard Overview', 'Insert Your Password'])
+        'Choose a Page', ['Password Analysis: A Visual Dashboard Overview', 'Insert Your Password', 'Clustering Analysis','Insert Password for Clustering Analysis'])
 
     if page == 'Password Analysis: A Visual Dashboard Overview':
         st.header('Password Analysis: A Visual Dashboard Overview')
@@ -53,6 +56,11 @@ def main():
         password = st.text_input("Password", type="password")
         # You can process the password input as needed
 
+    elif page == 'Clustering Analysis':
+        static_clusters_page()
+
+    elif page == 'Insert Password for Clustering Analysis':
+        dynamic_clusters_page()
 
 if __name__ == "__main__":
     main()
