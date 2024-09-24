@@ -13,7 +13,7 @@ def extract_first_100_lines(input_file, output_file):
                     break  # Stop once 100 lines have been processed
 
 # Specify the input and output files
-input_file = 'pwnedpasswords_ntlm.txt'
+input_file = 'pwned-passwords-ordered-by-count.txt'
 output_file = 'output_100_lines.txt'
 
 # Call the function to extract the first 100 lines

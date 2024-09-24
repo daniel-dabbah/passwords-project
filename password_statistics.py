@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.colors as mcolors
 import numpy as np
 import re
+import math
 
 # Define the valid ASCII characters
 valid_ascii_chars = string.ascii_letters + string.digits + string.punctuation + " "
@@ -117,6 +118,26 @@ def extract_year(password):
     for year in match:
         if 1930 <= int(year) <= 2030:
             return int(year)
+        
+def calculate_entropy(password):
+    """Calculate the entropy of a password based on the character sets it uses."""
+    char_set_size = 0
+
+    if is_lower_case_present(password):
+        char_set_size += 26  # Lowercase letters
+    if is_upper_case_present(password):
+        char_set_size += 26  # Uppercase letters
+    if is_numbers_present(password):
+        char_set_size += 10  # Numbers
+    if is_special_characters_present(password):
+        char_set_size += len(special_chars)  # Special characters
+
+    password_length = len(password)
+    if char_set_size == 0 or password_length == 0:
+        return 0  # Entropy is zero if the password contains no characters or has zero length
+
+    entropy = password_length * math.log2(char_set_size)
+    return entropy
 
 
 def analyze_passwords(file_path):
@@ -127,6 +148,8 @@ def analyze_passwords(file_path):
 
     # List to store all the passwords
     passwords = []
+    # List to store the entropies of the passwords
+    entropies = [] 
     # Total password count
     total_password_count = 0
 
@@ -204,6 +227,11 @@ def analyze_passwords(file_path):
     for length in count_of_lower_case_per_length_per_count:
         for count in range(1, length+1):
             count_of_lower_case_per_length_per_count[length][count] = 0
+
+    entropy_by_length = {}  # Dictionary to store entropies by password length
+
+    char_counts_for_log_likelihood = {char: 0 for char in valid_ascii_chars}  # Initialize counts to 0
+    total_chars = 0  # Total number of characters processed
     
     """ Going Through Passwords Line by Line """
     # Read the file line by line
@@ -219,6 +247,10 @@ def analyze_passwords(file_path):
             passwords.append(password)
             # Increment total password count
             total_password_count += 1
+
+            # Calculate entropy for the password
+            entropy = calculate_entropy(password)
+            entropies.append(entropy)
 
             # Contains Only 
             if is_lower_case_only(password):
@@ -351,6 +383,19 @@ def analyze_passwords(file_path):
             if is_lower_case_present(password):
                 count_of_passwords_with_lower_case_per_length[len(password)] += 1
                 count_of_lower_case_per_length_per_count[len(password)][extract_num_of_lower_case(password)] += 1
+            
+            """ Entropy by Length """
+            # Group entropies by password length
+            password_length = len(password)
+            if password_length not in entropy_by_length:
+                entropy_by_length[password_length] = []
+            entropy_by_length[password_length].append(entropy)
+
+            """ Log-Likelihood """
+            for char in line:
+                if char in char_counts_for_log_likelihood:  # Only count characters in the ASCII range
+                    char_counts_for_log_likelihood[char] += 1
+                    total_chars += 1
 
     """ If there are no passwords of a certain length, set the count to 1 to avoid division by zero """
     for i in range(4, 31):
@@ -375,9 +420,18 @@ def analyze_passwords(file_path):
         count_of_lower_case_per_length_per_count_percentages[length] = {}
         for count in range(1, length+1):
             count_of_special_characters_per_length_per_count_percentages[length][count] = (count_of_special_characters_per_length_per_count[length][count] / count_of_passwords_with_special_characters_per_length[length]) * 100
-            count_of_numbers_per_length_per_count[length][count] = (count_of_numbers_per_length_per_count[length][count] / count_of_passwords_with_numbers_per_length[length]) * 100
-            count_of_upper_case_per_length_per_count[length][count] = (count_of_upper_case_per_length_per_count[length][count] / count_of_passwords_with_upper_case_per_length[length]) * 100
-            count_of_lower_case_per_length_per_count[length][count] = (count_of_lower_case_per_length_per_count[length][count] / count_of_passwords_with_lower_case_per_length[length]) * 100
+            count_of_numbers_per_length_per_count_percentages[length][count] = (count_of_numbers_per_length_per_count[length][count] / count_of_passwords_with_numbers_per_length[length]) * 100
+            count_of_upper_case_per_length_per_count_percentages[length][count] = (count_of_upper_case_per_length_per_count[length][count] / count_of_passwords_with_upper_case_per_length[length]) * 100
+            count_of_lower_case_per_length_per_count_percentages[length][count] = (count_of_lower_case_per_length_per_count[length][count] / count_of_passwords_with_lower_case_per_length[length]) * 100
+
+    """ Calculate probabilities (normalize the counts) for log-likelihood """
+    char_probabilities_for_log_likelihood = {}
+    for char, count in char_counts_for_log_likelihood.items():
+        if total_chars > 0:
+            char_probabilities_for_log_likelihood[char] = count / total_chars
+        else:
+            char_probabilities_for_log_likelihood[char] = 0.0  # Avoid division by zero if file is empty
+
     
     """ Return all the statistics in a dictionary """
     return passwords, {
@@ -439,7 +493,12 @@ def analyze_passwords(file_path):
 
         # Percentages of the latter - special characters, numbers, upper case, and lower case per length per count
         "count_of_special_characters_per_length_per_count_percentages": count_of_special_characters_per_length_per_count_percentages,
-        "count_of_numbers_per_length_per_count_percentages": count_of_numbers_per_length_per_count,
-        "count_of_upper_case_per_length_per_count_percentages": count_of_upper_case_per_length_per_count,
-        "count_of_lower_case_per_length_per_count_percentages": count_of_lower_case_per_length_per_count
+        "count_of_numbers_per_length_per_count_percentages": count_of_numbers_per_length_per_count_percentages,
+        "count_of_upper_case_per_length_per_count_percentages": count_of_upper_case_per_length_per_count_percentages,
+        "count_of_lower_case_per_length_per_count_percentages": count_of_lower_case_per_length_per_count_percentages,
+        
+        "entropies": entropies,
+        "entropy_by_length": entropy_by_length,
+
+        "char_probabilities_for_log_likelihood": char_probabilities_for_log_likelihood
     }
