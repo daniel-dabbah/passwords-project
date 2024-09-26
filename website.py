@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from PIL import Image
-from website_static_clusters import static_clusters_page
-from website_dynamic_clusters import dynamic_clusters_page
-
-
+# from website_static_clusters import static_clusters_page
+# from website_dynamic_clusters import dynamic_clusters_page
+from website_static_visualizations import static_visualization_page
+from website_dynamic_visualizations import dynamic_visualization_page
 def main():
     st.set_page_config(layout="wide")  # Set the layout to wide to make the margin thinner
     st.title('Password Project')
@@ -29,38 +29,23 @@ def main():
         
         Our objective is to offer a nuanced understanding of password security dynamics and to suggest enhanced strategies for safeguarding data against breaches.
         """)
+
+        static_visualization_page()
         
 
-        # Define the path to the generated plots
-        plot_path = 'generated_plots/rockyou_mini.txt'
-
-        # List all plot files in the directory
-        plot_files = [f for f in os.listdir(plot_path) if os.path.isfile(os.path.join(plot_path, f))]
-
-        # Display graphs in rows, each containing 3 graphs
-        for i in range(0, len(plot_files), 3):  # loop through the plot files in steps of 3
-            cols = st.columns(3)  # create 3 columns for each row
-            for j in range(3):  # loop to fill each column with a graph
-                if i + j < len(plot_files):  # check if there are remaining plot files
-                    with cols[j]:
-                        plot_file = plot_files[i + j]
-                        image = Image.open(os.path.join(plot_path, plot_file))
-                        st.image(image, use_column_width=True, width=2400)
         
 
     elif page == 'Insert Your Password':
         st.header('Insert Your Password')
-        st.write("Please enter your password below.")
-        st.write("For example, write 'MosheInLondon123'")
-
-        password = st.text_input("Password", type="password")
+        
+        dynamic_visualization_page()
         # You can process the password input as needed
 
-    elif page == 'Clustering Analysis':
-        static_clusters_page()
+    # elif page == 'Clustering Analysis':
+    #     static_clusters_page()
 
-    elif page == 'Insert Password for Clustering Analysis':
-        dynamic_clusters_page()
+    # elif page == 'Insert Password for Clustering Analysis':
+    #     dynamic_clusters_page()
 
 if __name__ == "__main__":
     main()
