@@ -1,5 +1,6 @@
 african-american
-zimmermanhoward
+zimmerman
+howard
 identification
 administration
 characteristic
@@ -428,7 +429,8 @@ therefore
 expensive
 counselor
 agreement
-zelmamilo
+zelma
+milo
 education
 candidate
 practical

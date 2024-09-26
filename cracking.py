@@ -60,7 +60,8 @@ def main():
     if all_results:
         with open(json_output_file, 'w') as json_file:
             json.dump(all_results, json_file, indent=4)
-        print(f"\nAll results have been written to {json_output_file}")
+        print(f"\nfound {len(all_results)} passwords")
+        print(f"All results have been written to {json_output_file}")
     else:
         print("No hashes found.")
 
