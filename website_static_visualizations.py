@@ -289,37 +289,6 @@ def plot_entropy_distribution(loaded_statistics):
 
     st.plotly_chart(fig_entropy, use_container_width=True)
 
-def plot_entropy_distribution_user_length(loaded_statistics):
-    """Plot entropy distribution for a user-specified password length."""
-    st.header('Entropy Distribution for Specific Password Length')
-    st.write("Enter a password length to see the entropy distribution.")
-    
-    # User input for password length
-    length = st.number_input('Select Password Length:', min_value=1, max_value=30, value=8, step=1)
-    
-    entropies_by_length = loaded_statistics['entropy_by_length_percentages']
-    entropies_length = entropies_by_length.get(str(length), [])
-    
-    if entropies_length:
-        df_entropy_length = pd.DataFrame({
-            'Entropy': entropies_length
-        })
-    
-        fig_entropy_length = px.histogram(
-            df_entropy_length,
-            x='Entropy',
-            nbins=50,
-            labels={'Entropy': 'Entropy (bits)', 'percentage': 'Percenatge'},
-            title=f'Entropy Distribution for Passwords of Length {length}',
-            color_discrete_sequence=['teal'],
-            height=600,  # Increased height
-            width=1000    # Increased width
-        )
-    
-        st.plotly_chart(fig_entropy_length, use_container_width=True)
-    else:
-        st.write(f"No entropy data available for passwords of length {length}.")
-
 def plot_average_numbers_by_length(loaded_statistics, character_type):
     """Plot the average number of specified character type by password length."""
     if character_type == 'Numbers':
@@ -572,7 +541,6 @@ def static_visualization_page():
     plot_position_of_specific_special_characters(loaded_statistics)
     plot_year_usage(loaded_statistics)
     plot_entropy_distribution(loaded_statistics)
-    # plot_entropy_distribution_user_length(loaded_statistics)
 
 
     # New plots

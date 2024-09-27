@@ -4,6 +4,8 @@ import plotly.express as px
 import pandas as pd
 import os
 import re
+import plotly.graph_objects as go
+
 
 def load_data(filename):
     with open(filename, 'rb') as f:
@@ -61,6 +63,7 @@ def analyze_password(password):
         }
     else:
         return None
+    
 
 def display_password_analysis(password_info):
     """Display the analysis of the user's password."""
@@ -202,40 +205,60 @@ def plot_special_character_usage(loaded_statistics, user_special_chars):
 
         st.plotly_chart(fig_special, use_container_width=True)
 
-def plot_year_usage(loaded_statistics, user_years):
-    """Plot year usage in passwords and highlight years in user's password."""
-    st.header('Year Usage in Passwords')
-    st.write("Discover how often years appear in passwords, indicating potential use of dates or birth years.")
-
-    year_counts = loaded_statistics['year_counts']
-    years = sorted(year_counts.keys())
-    counts = [year_counts[year] for year in years]
-
-    # Create a DataFrame for years
-    df_year = pd.DataFrame({
-        'Year': years,
-        'Count': counts
-    })
-
-    # Highlight years present in the user's password
+def plot_year_usage_histogram(loaded_statistics, user_years):
+    """
+    Plot year usage in passwords as a histogram.
+    Highlights the year present in the user's password in red.
+    
+    Args:
+        loaded_statistics (dict): The statistics dictionary loaded from JSON.
+        user_years (set): Set of years detected in the user's password.
+    """
     if user_years:
+        st.header('Year Usage in Passwords')
+        st.write("Discover how often years appear in passwords, indicating potential use of dates or birth years.")
+        
+        year_counts = loaded_statistics.get('year_counts', {})
+        if not year_counts:
+            st.write("No year usage data available.")
+            return
+        
+        years = sorted(year_counts.keys())
+        counts = [year_counts[year] for year in years]
+    
+        # Create a DataFrame for years
+        df_year = pd.DataFrame({
+            'Year': years,
+            'Count': counts
+        })
+    
+        # Highlight years present in the user's password
         df_year['Color'] = df_year['Year'].apply(lambda x: 'red' if str(x) in user_years else 'blue')
-        st.write(f"Years in your password: {' '.join(sorted(user_years))}")
+    
+        # Create the histogram using Plotly Graph Objects
+        fig_year = go.Figure()
+    
+        # Add bars for each year
+        for _, row in df_year.iterrows():
+            fig_year.add_trace(go.Bar(
+                x=[row['Year']],
+                y=[row['Count']],
+                marker_color=row['Color'],
+                name=row['Year']
+            ))
+    
+        fig_year.update_layout(
+            title='Year Usage in Passwords Histogram',
+            xaxis_title='Year',
+            yaxis_title='Count',
+            showlegend=False,
+            height=600,
+            width=800
+        )
+    
+        st.plotly_chart(fig_year, use_container_width=True)
     else:
-        df_year['Color'] = 'blue'
-        st.write("No years found in your password.")
-
-    fig_year = px.bar(
-        df_year,
-        x='Year',
-        y='Count',
-        labels={'Year': 'Year', 'Count': 'Count'},
-        title='Year Usage in Passwords',
-        color='Color',
-        color_discrete_map={'red': 'red', 'blue': 'blue'}
-    )
-
-    st.plotly_chart(fig_year, use_container_width=True)
+        st.write("No years detected in your password. Year usage plot will not be displayed.")
 
 def plot_entropy_distribution(loaded_statistics, entropy_value):
     """Plot entropy distribution and indicate user's password entropy."""
@@ -445,58 +468,138 @@ def plot_special_characters_by_length(loaded_statistics):
     else:
         st.write("No data available for number of special characters by password length.")
 
+def categorize_password(password, special_chars):
+    """
+    Determine the category of the password based on its characteristics.
+    Returns the category name as a string.
+    """
+    has_lower = any(c.islower() for c in password)
+    has_upper = any(c.isupper() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    has_special = any(c in special_chars for c in password)
+    
+    # Define category based on presence of character types
+    if has_lower and not has_upper and not has_digit and not has_special:
+        return "Lower Case Only"
+    elif has_upper and not has_lower and not has_digit and not has_special:
+        return "Upper Case Only"
+    elif has_digit and not has_lower and not has_upper and not has_special:
+        return "Numbers Only"
+    elif has_lower and has_digit and not has_upper and not has_special:
+        return "Lower and Numbers"
+    elif has_lower and has_special and not has_upper and not has_digit:
+        return "Lower and Special"
+    elif has_upper and has_digit and not has_lower and not has_special:
+        return "Upper and Numbers"
+    elif has_upper and has_special and not has_lower and not has_digit:
+        return "Upper and Special"
+    elif has_special and has_digit and not has_lower and not has_upper:
+        return "Special and Numbers"
+    elif has_lower and has_upper and has_digit and not has_special:
+        return "Lower Upper and Numbers"
+    elif has_lower and has_upper and has_special and not has_digit:
+        return "Lower Upper and Special"
+    elif has_lower and has_special and has_digit and not has_upper:
+        return "Lower Special and Numbers"
+    elif has_upper and has_special and has_digit and not has_lower:
+        return "Upper Special and Numbers"
+    elif has_lower and has_upper and has_digit and has_special:
+        return "All Character Types"
+    elif has_lower and has_upper and not has_digit and not has_special:
+        return "Lower and Upper"
+    
+    return "Uncategorized"
 
 
-def plot_password_characteristics_pie(loaded_statistics):
-    """Plot the password characteristics distribution as a pie chart."""
-    st.header('Password Characteristics Distribution')
-    st.write("Visualize the distribution of different password characteristics.")
+def plot_password_categories_distribution(loaded_statistics, user_password, special_chars):
+    """
+    Plot password categories distribution as a treemap.
+    Highlights the category of the user-inputted password in red.
+    
+    Args:
+        loaded_statistics (dict): The statistics dictionary loaded from JSON.
+        user_password (str): The password input by the user.
+        special_chars (str): String containing special characters.
+    """
+    st.header('Password Categories Distribution')
+    st.write("Visualize the distribution of different password characteristics using a treemap.")
+    
+    # Define the categories and their corresponding percentages
+    categories = {
+        "Lower Case Only": loaded_statistics.get('lower_case_only_percentage', 0),
+        "Upper Case Only": loaded_statistics.get('upper_case_only_percentage', 0),
+        "Numbers Only": loaded_statistics.get('numbers_only_percentage', 0),
+        "Lower and Numbers": loaded_statistics.get('lower_case_and_numbers_percentage', 0),
+        "Lower and Special": loaded_statistics.get('lower_case_and_special_characters_percentage', 0),
+        "Upper and Numbers": loaded_statistics.get('upper_case_and_numbers_percentage', 0),
+        "Upper and Special": loaded_statistics.get('upper_case_and_special_characters_percentage', 0),
+        "Special and Numbers": loaded_statistics.get('special_characters_and_numbers_percentage', 0),
+        "Lower Upper and Numbers": loaded_statistics.get('lower_upper_case_and_numbers_percentage', 0),
+        "Lower Upper and Special": loaded_statistics.get('lower_upper_case_and_special_characters_percentage', 0),
+        "Lower Special and Numbers": loaded_statistics.get('lower_special_characters_and_numbers_percentage', 0),
+        "Upper Special and Numbers": loaded_statistics.get('upper_special_characters_and_numbers_percentage', 0),
+        "All Character Types": loaded_statistics.get('all_character_types_percentage', 0),
+        "Lower and Upper": loaded_statistics.get('lower_case_and_upper_case_percentage', 0)
+    }
 
-    # Prepare data for pie chart
-    labels = [
-        "Lower Case Only", "Upper Case Only", "Numbers Only",
-        "Lower and Numbers", "Lower and Special",
-        "Upper and Numbers", "Upper and Special", "Lower Upper and Numbers",
-        "Special and Numbers", "Lower Upper and Special", "Lower Special and Numbers",
-        "Upper Special and Numbers", "All Character Types", "Lower and Upper"
-    ]
-    percentages = [
-        loaded_statistics['lower_case_only_percentage'],
-        loaded_statistics['upper_case_only_percentage'],
-        loaded_statistics['numbers_only_percentage'],
-        loaded_statistics['lower_case_and_numbers_percentage'],
-        loaded_statistics['lower_case_and_special_characters_percentage'],
-        loaded_statistics['upper_case_and_numbers_percentage'],
-        loaded_statistics['upper_case_and_special_characters_percentage'],
-        loaded_statistics['lower_upper_case_and_numbers_percentage'],
-        loaded_statistics['special_characters_and_numbers_percentage'],
-        loaded_statistics['lower_upper_case_and_special_characters_percentage'],
-        loaded_statistics['lower_special_characters_and_numbers_percentage'],
-        loaded_statistics['upper_special_characters_and_numbers_percentage'],
-        loaded_statistics['all_character_types_percentage'],
-        loaded_statistics['lower_case_and_upper_case_percentage']
-    ]
-
-    # Create a DataFrame for the pie chart
-    df_pie = pd.DataFrame({
-        'Characteristics': labels,
-        'Percentage': percentages
+    # Create a DataFrame for the treemap
+    df_categories = pd.DataFrame({
+        'Category': list(categories.keys()),
+        'Percentage': list(categories.values())
     })
+    
+    # Determine the category of the user-inputted password
+    if user_password:
+        user_category = categorize_password(user_password, special_chars)
+        st.write(f"**Your password is categorized as:** {user_category}")
+        if user_category not in categories:
+            st.warning(f"The input password does not fit into any predefined category. It is categorized as 'Uncategorized'.")
+            # Add 'Uncategorized' to your categories with percentage 0
+            df_categories = df_categories.append({'Category': 'Uncategorized', 'Percentage': 0}, ignore_index=True)
+    else:
+        user_category = None
 
-    # Since the pie chart represents categories, we won't highlight user data here
+    # Assign colors: red for the user's category, blue scale for others
+    def assign_colors_graph_objects(df, highlight_category):
+        colors = []
+        blues = px.colors.sequential.Blues
+        # Get the maximum percentage to normalize the blue scale
+        max_percentage = df['Percentage'].max() if df['Percentage'].max() > 0 else 1
+        for _, row in df.iterrows():
+            if row['Category'] == highlight_category:
+                colors.append('red')
+            else:
+                # Normalize the percentage to get a shade of blue
+                normalized = row['Percentage'] / max_percentage
+                normalized = max(0, min(normalized, 1))  # Ensure normalized is between 0 and 1
+                # Select a color from Blues scale based on normalized value
+                color_index = int(normalized * (len(blues) - 1))
+                colors.append(blues[color_index])
+        return colors
 
-    # Create an interactive pie chart using Plotly
-    fig_pie = px.pie(
-        df_pie,
-        names='Characteristics',
-        values='Percentage',
-        title='Password Characteristics Distribution',
-        hole=0.4
+    # Get the color list
+    color_list = assign_colors_graph_objects(df_categories, user_category if user_category != "Uncategorized" else None)
+
+    # Assign colors
+    df_categories['Custom_Color'] = color_list
+
+    # Create the treemap using Plotly Graph Objects
+    fig = go.Figure(go.Treemap(
+        labels=df_categories['Category'],
+        parents=[""] * len(df_categories),  # All categories have no parent
+        values=df_categories['Percentage'],
+        marker=dict(colors=df_categories['Custom_Color']),
+        textinfo='label+percent parent'
+    ))
+
+    fig.update_layout(
+        title='Password Categories Distribution Treemap',
+        height=800,
+        width=1000
     )
 
-    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.plotly_chart(fig_pie, use_container_width=True)
 
 def display_password_strength_feedback(entropy_value):
     """Provide feedback on the user's password strength."""
@@ -550,14 +653,15 @@ def dynamic_visualization_page():
     # Plotting functions
     plot_password_length_distribution(loaded_statistics, password_length)
     plot_ascii_character_usage(loaded_statistics, user_chars)
+    plot_password_categories_distribution(loaded_statistics, password, special_chars="!@#$%^&*()-_=+[]{|;:'\,.<>?/`~ }")
     plot_special_character_usage(loaded_statistics, user_special_chars)
-    plot_year_usage(loaded_statistics, user_years)
+
+    plot_year_usage_histogram(loaded_statistics, user_years)
     plot_entropy_distribution(loaded_statistics, entropy_value)
     plot_number_position_violin(loaded_statistics, user_number_positions)
     plot_special_character_position_violin(loaded_statistics, user_special_positions)
     if password_info and user_special_chars:
         plot_specific_special_character_positions(loaded_statistics, user_special_chars)
     plot_special_characters_by_length(loaded_statistics)
-    plot_password_characteristics_pie(loaded_statistics)
     display_password_strength_feedback(entropy_value)
 

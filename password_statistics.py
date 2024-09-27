@@ -433,24 +433,6 @@ def analyze_passwords(file_path):
             char_probabilities_for_log_likelihood[char] = count / total_chars
         else:
             char_probabilities_for_log_likelihood[char] = 0.0  # Avoid division by zero if file is empty
-    
-
-    """ Calculate entropy distribution percentages by length """
-    entropy_by_length_percentages = {}
-    
-    for length, entropies in entropy_by_length.items():
-        if len(entropies) > 0:
-            # Calculate histogram with 50 bins
-            counts, bin_edges = np.histogram(entropies, bins=50, range=(0, max(entropies)))
-            
-            # Normalize counts to percentages
-            percentages = (counts / counts.sum()) * 100
-            
-            # Store the percentages as a list
-            entropy_by_length_percentages[length] = percentages.tolist()
-        else:
-            # If no entropies for this length, store an empty list
-            entropy_by_length_percentages[length] = []
 
     
     """ Return all the statistics in a dictionary """
@@ -519,7 +501,6 @@ def analyze_passwords(file_path):
         
         "entropies": entropies,
         "entropy_by_length": entropy_by_length,
-        "entropy_by_length_percentages": entropy_by_length_percentages,
 
         "char_probabilities_for_log_likelihood": char_probabilities_for_log_likelihood
     }
