@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import re
 import plotly.express as px
 import pandas as pd
+import json
+import mpld3
 from password_strength_helper import (automatic_deny, give_character_type_score,
                                       calc_modified_password_score, remove_pattern)
 from password_strength import calculate_password_strength
@@ -41,7 +43,7 @@ length_counter = np.zeros(40)
 for p1 in rockyou2009_10k:
     if len(p1) > 32:
         continue
-    password_score, p = calculate_password_strength(p1)
+    password_score, p = calculate_password_strength(p1, with_details=False)
     password_scores.append(password_score)
     ok_passwords.append(p1)
     fixed_passwords.append(p)
@@ -58,21 +60,23 @@ df['password'] = ok_passwords
 df['score'] = password_scores
 df['modified'] = fixed_passwords
 df['length'] = pass_len
-fig = px.scatter(df, x='length', y='score', hover_data=['password', 'modified'])
 
-fig.update_layout(
-    title="Passwords Strengths",
-    title_font_size = 25,
-    title_xanchor='center',
-    title_xref = "paper",
-    title_x=0.5,
-    paper_bgcolor="LightSteelBlue",
-)
-
-fig.update_xaxes(title_text="Password Length", title_font_size=20)
-fig.update_yaxes(title_text="Password Strength", title_font_size=20)
-
-fig.show()
+# Save as a CSV file
+df.to_csv('password_strength_dataframe.csv', index=False)  # `index=False` avoids saving the index as a column
+# fig = px.scatter(df, x='length', y='score', hover_data=['password', 'modified'])
+#
+# fig.update_layout(
+#     title="Passwords Strengths",
+#     title_font_size = 25,
+#     title_xanchor='center',
+#     title_xref = "paper",
+#     title_x=0.5,
+#     paper_bgcolor="LightSteelBlue",
+# )
+#
+# fig.update_xaxes(title_text="Password Length", title_font_size=20)
+# fig.update_yaxes(title_text="Password Strength", title_font_size=20)
+# fig.show()
 
 
 sorted_passwords = sorted(rockyou2009_10k, key=calculate_password_strength, reverse=True)
@@ -87,16 +91,25 @@ for i in range(1, 101):
 bins = np.zeros(10)
 for p in sorted_passwords:
     score, p1 = calculate_password_strength(p)
-    bins[round(score)] += 1
+    if score >= 10:
+        score = 9.9
+    bins[int(score)] += 1
 
+# Convert NumPy array to a list
+bins_list = bins.tolist()
 
-fig = plt.figure(figsize = (15, 10))
+# Save as JSON
+with open('password_strength_bins.json', 'w') as f:
+    json.dump(bins_list, f)
+#
+# fig = plt.figure(figsize = (15, 10))
+#
+# # creating the bar plot
+# plt.bar(range(10), bins, color ='maroon')
+#
+# plt.xlabel("Password Strength Score", fontsize=18)
+# plt.ylabel("Number of Passwords", fontsize=18)
+# plt.title("Password Scores Histogram", fontsize=23)
+# plt.xticks(ticks = range(0, 10), labels=["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7", "7-8", "8-9", "9-10"], fontsize=14)
 
-# creating the bar plot
-plt.bar(range(10), bins, color ='maroon')
-
-plt.xlabel("Password Strength Score", fontsize=18)
-plt.ylabel("Number of Passwords", fontsize=18)
-plt.title("Password Scores Histogram", fontsize=23)
-plt.xticks(ticks = range(0, 10), labels=["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7", "7-8", "8-9", "9-10"], fontsize=14)
-plt.show()
+# plt.show()

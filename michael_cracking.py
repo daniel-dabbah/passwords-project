@@ -12,7 +12,6 @@ from collections import defaultdict
 #     "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
 # ]
 
-
 directory_path = "password_strength_text_files/"
 #
 # with open(directory_path + "word.txt", 'r') as f:
