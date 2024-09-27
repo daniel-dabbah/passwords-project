@@ -1,11 +1,13 @@
 import streamlit as st
 import json
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import re
 
 def load_data(filename):
+    """Load data from a JSON file."""
     with open(filename, 'r') as f:
         return json.load(f)
 
@@ -14,7 +16,7 @@ def plot_password_length_distribution(loaded_statistics):
     st.header('Password Length Distribution')
     st.write("Understand the distribution of password lengths.")
 
-    length_percentages = loaded_statistics['length_percentages']
+    length_percentages = loaded_statistics.get('length_percentages', {})
     lengths = list(map(int, length_percentages.keys()))
     percentages = list(length_percentages.values())
 
@@ -53,7 +55,7 @@ def plot_ascii_character_usage(loaded_statistics):
     st.header('ASCII Character Usage')
     st.write("Discover which ASCII characters are most commonly used in passwords.")
 
-    ascii_counts = loaded_statistics['ascii_counts']
+    ascii_counts = loaded_statistics.get('ascii_counts', {})
 
     ascii_order = [chr(i) for i in range(32, 127)]  # ASCII characters from space to '~'
     ascii_percentages = [ascii_counts.get(char, 0) for char in ascii_order]
@@ -86,9 +88,9 @@ def plot_ascii_character_usage(loaded_statistics):
     st.plotly_chart(fig_ascii, use_container_width=True)
 
 def plot_password_categories_distribution(loaded_statistics):
-    """Plot password categories distribution using both bar chart and treemap."""
+    """Plot password categories distribution using treemap."""
     st.header('Password Categories Distribution')
-    st.write("Visualize the distribution of different password characteristics using bar charts and treemaps.")
+    st.write("Visualize the distribution of different password characteristics using a treemap.")
     
     # Define the categories and their corresponding percentages
     categories = {
@@ -108,7 +110,7 @@ def plot_password_categories_distribution(loaded_statistics):
         "Lower and Upper": loaded_statistics.get('lower_case_and_upper_case_percentage', 0)
     }
 
-    # Create a DataFrame for the bar chart
+    # Create a DataFrame for the treemap
     df_categories = pd.DataFrame({
         'Category': list(categories.keys()),
         'Percentage': list(categories.values())
@@ -136,7 +138,7 @@ def plot_number_position_violin(loaded_statistics):
     st.header('Position of Numbers in Passwords')
     st.write("Visualize where numbers are commonly placed within passwords.")
 
-    number_positions = loaded_statistics['number_positions']
+    number_positions = loaded_statistics.get('number_positions', [])
     if number_positions:
         df_number_positions = pd.DataFrame(number_positions, columns=['Password Length', 'Normalized Position'])
         df_number_positions['Password Length'] = df_number_positions['Password Length'].astype(str)
@@ -169,7 +171,7 @@ def plot_special_character_position_violin(loaded_statistics):
     st.header('Position of Special Characters in Passwords')
     st.write("Visualize where special characters are commonly placed within passwords.")
 
-    special_char_positions = loaded_statistics['special_char_positions']
+    special_char_positions = loaded_statistics.get('special_char_positions', [])
     if special_char_positions:
         df_special_positions = pd.DataFrame(special_char_positions, columns=['Password Length', 'Normalized Position'])
         df_special_positions['Password Length'] = df_special_positions['Password Length'].astype(str)
@@ -202,7 +204,7 @@ def plot_position_of_specific_special_characters(loaded_statistics):
     st.header('Position of Specific Special Characters in Passwords')
     st.write("Visualize where a specific special character is commonly placed within passwords.")
 
-    special_char_positions_per_char = loaded_statistics['special_char_positions_per_char']
+    special_char_positions_per_char = loaded_statistics.get('special_char_positions_per_char', {})
 
     # Allow user to input special character
     special_char = st.text_input('Enter a special character to analyze its position:', value='!')
@@ -246,7 +248,11 @@ def plot_year_usage(loaded_statistics):
     st.header('Year Usage in Passwords')
     st.write("Discover how often years appear in passwords, indicating potential use of dates or birth years.")
 
-    year_counts = loaded_statistics['year_counts']
+    year_counts = loaded_statistics.get('year_counts', {})
+    if not year_counts:
+        st.write("No year usage data available.")
+        return
+
     years = sorted(map(int, year_counts.keys()))
     counts = [year_counts[str(year)] for year in years]
 
@@ -272,7 +278,7 @@ def plot_entropy_distribution(loaded_statistics):
     st.header('Entropy Distribution')
     st.write("Entropy measures the unpredictability of passwords. Higher entropy indicates stronger passwords.")
 
-    entropies = loaded_statistics['entropies']
+    entropies = loaded_statistics.get('entropies', [])
 
     df_entropy = pd.DataFrame({
         'Entropy': entropies
@@ -301,6 +307,11 @@ def plot_average_numbers_by_length(loaded_statistics, character_type):
         title = 'Average Number of Upper Case Letters by Password Length'
         y_label = 'Average Number of Upper Case Letters'
         color_scale = 'Oranges'
+    elif character_type == 'Lower Case Letters':
+        percentages_data = loaded_statistics.get('count_of_lower_case_per_length_per_count_percentages', {})
+        title = 'Average Number of Lower Case Letters by Password Length'
+        y_label = 'Average Number of Lower Case Letters'
+        color_scale = 'Greens'
     elif character_type == 'Special Characters':
         percentages_data = loaded_statistics.get('count_of_special_characters_per_length_per_count_percentages', {})
         title = 'Average Number of Special Characters by Password Length'
@@ -353,45 +364,54 @@ def plot_average_numbers_by_length(loaded_statistics, character_type):
         st.write(f"No data available for {character_type} by password length.")
 
 def plot_average_numbers_for_length(loaded_statistics, length):
-    """Plot average numbers of upper letters, special characters, and numbers for a specific password length."""
-    st.header(f'Average Character Counts for Passwords of Length {length}')
+    """Plot average numbers and distributions for upper letters, lower letters, special characters, and numbers for a specific password length."""
+    st.header(f'Character Counts for Passwords of Length {length}')
     length_str = str(length)
     data = {}
 
     # For Numbers
-    percentages_data = loaded_statistics.get('count_of_numbers_per_length_per_count_percentages', {})
-    counts_dict = percentages_data.get(length_str, {})
+    percentages_data_numbers = loaded_statistics.get('count_of_numbers_per_length_per_count_percentages', {})
+    counts_dict_numbers = percentages_data_numbers.get(length_str, {})
     expected_numbers = 0
-    for count_str, percentage in counts_dict.items():
+    for count_str, percentage in counts_dict_numbers.items():
         count = int(count_str)
         expected_numbers += count * (percentage / 100)
     data['Average Number of Numbers'] = expected_numbers
 
     # For Upper Case Letters
-    percentages_data = loaded_statistics.get('count_of_upper_case_per_length_per_count_percentages', {})
-    counts_dict = percentages_data.get(length_str, {})
+    percentages_data_upper = loaded_statistics.get('count_of_upper_case_per_length_per_count_percentages', {})
+    counts_dict_upper = percentages_data_upper.get(length_str, {})
     expected_upper = 0
-    for count_str, percentage in counts_dict.items():
+    for count_str, percentage in counts_dict_upper.items():
         count = int(count_str)
         expected_upper += count * (percentage / 100)
     data['Average Number of Upper Case Letters'] = expected_upper
 
+    # For Lower Case Letters
+    percentages_data_lower = loaded_statistics.get('count_of_lower_case_per_length_per_count_percentages', {})
+    counts_dict_lower = percentages_data_lower.get(length_str, {})
+    expected_lower = 0
+    for count_str, percentage in counts_dict_lower.items():
+        count = int(count_str)
+        expected_lower += count * (percentage / 100)
+    data['Average Number of Lower Case Letters'] = expected_lower
+
     # For Special Characters
-    percentages_data = loaded_statistics.get('count_of_special_characters_per_length_per_count_percentages', {})
-    counts_dict = percentages_data.get(length_str, {})
+    percentages_data_special = loaded_statistics.get('count_of_special_characters_per_length_per_count_percentages', {})
+    counts_dict_special = percentages_data_special.get(length_str, {})
     expected_special = 0
-    for count_str, percentage in counts_dict.items():
+    for count_str, percentage in counts_dict_special.items():
         count = int(count_str)
         expected_special += count * (percentage / 100)
     data['Average Number of Special Characters'] = expected_special
 
-    # Create a DataFrame
+    # Create a DataFrame for the average counts
     df_data = pd.DataFrame({
         'Character Type': list(data.keys()),
         'Average Count': list(data.values())
     })
 
-    # Create a bar plot
+    # Create an aggregated bar plot for average counts
     fig = px.bar(
         df_data,
         x='Character Type',
@@ -403,6 +423,12 @@ def plot_average_numbers_for_length(loaded_statistics, length):
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+    # Plot distributions for each character type
+    plot_distribution_for_length(loaded_statistics, length, 'Numbers')
+    plot_distribution_for_length(loaded_statistics, length, 'Upper Case Letters')
+    plot_distribution_for_length(loaded_statistics, length, 'Lower Case Letters')
+    plot_distribution_for_length(loaded_statistics, length, 'Special Characters')
 
 def plot_distribution_for_length(loaded_statistics, length, character_type):
     """Plot the distribution of counts for a specific character type at a given password length."""
@@ -417,6 +443,11 @@ def plot_distribution_for_length(loaded_statistics, length, character_type):
         title = f'Distribution of Upper Case Letter Counts for Passwords of Length {length}'
         x_label = 'Number of Upper Case Letters'
         color = 'Oranges'
+    elif character_type == 'Lower Case Letters':
+        percentages_data = loaded_statistics.get('count_of_lower_case_per_length_per_count_percentages', {})
+        title = f'Distribution of Lower Case Letter Counts for Passwords of Length {length}'
+        x_label = 'Number of Lower Case Letters'
+        color = 'Greens'
     elif character_type == 'Special Characters':
         percentages_data = loaded_statistics.get('count_of_special_characters_per_length_per_count_percentages', {})
         title = f'Distribution of Special Character Counts for Passwords of Length {length}'
@@ -462,64 +493,7 @@ def plot_distribution_for_length(loaded_statistics, length, character_type):
 
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.write(f"No data available for passwords of length {length}.")
-
-def plot_average_numbers_for_length(loaded_statistics, length):
-    """Plot average numbers and distributions for upper letters, special characters, and numbers for a specific password length."""
-    st.header(f'Character Counts for Passwords of Length {length}')
-    length_str = str(length)
-    data = {}
-
-    # For Numbers
-    percentages_data_numbers = loaded_statistics.get('count_of_numbers_per_length_per_count_percentages', {})
-    counts_dict_numbers = percentages_data_numbers.get(length_str, {})
-    expected_numbers = 0
-    for count_str, percentage in counts_dict_numbers.items():
-        count = int(count_str)
-        expected_numbers += count * (percentage / 100)
-    data['Average Number of Numbers'] = expected_numbers
-
-    # For Upper Case Letters
-    percentages_data_upper = loaded_statistics.get('count_of_upper_case_per_length_per_count_percentages', {})
-    counts_dict_upper = percentages_data_upper.get(length_str, {})
-    expected_upper = 0
-    for count_str, percentage in counts_dict_upper.items():
-        count = int(count_str)
-        expected_upper += count * (percentage / 100)
-    data['Average Number of Upper Case Letters'] = expected_upper
-
-    # For Special Characters
-    percentages_data_special = loaded_statistics.get('count_of_special_characters_per_length_per_count_percentages', {})
-    counts_dict_special = percentages_data_special.get(length_str, {})
-    expected_special = 0
-    for count_str, percentage in counts_dict_special.items():
-        count = int(count_str)
-        expected_special += count * (percentage / 100)
-    data['Average Number of Special Characters'] = expected_special
-
-    # Create a DataFrame for the average counts
-    df_data = pd.DataFrame({
-        'Character Type': list(data.keys()),
-        'Average Count': list(data.values())
-    })
-
-    # Create an aggregated bar plot for average counts
-    fig = px.bar(
-        df_data,
-        x='Character Type',
-        y='Average Count',
-        labels={'Character Type': 'Character Type', 'Average Count': 'Average Count'},
-        title=f'Average Character Counts for Passwords of Length {length}',
-        color='Character Type',
-        color_discrete_sequence=px.colors.qualitative.Set3
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Plot distributions for each character type
-    plot_distribution_for_length(loaded_statistics, length, 'Numbers')
-    plot_distribution_for_length(loaded_statistics, length, 'Upper Case Letters')
-    plot_distribution_for_length(loaded_statistics, length, 'Special Characters')
+        st.write(f"No data available for passwords of length {length} and character type '{character_type}'.")
 
 def static_visualization_page():
     st.title('Password Dataset Visualization')
@@ -529,8 +503,8 @@ def static_visualization_page():
     dataset_name = 'rockyou2024-100K.txt'  # Update with your dataset name
 
     loaded_data = load_data(f'{dataset_name}_data_passwords_statistics.json')
-    loaded_passwords = loaded_data['passwords']
-    loaded_statistics = loaded_data['statistics']
+    loaded_passwords = loaded_data.get('passwords', [])
+    loaded_statistics = loaded_data.get('statistics', {})
 
     # Plotting functions
     plot_password_length_distribution(loaded_statistics)
@@ -542,15 +516,15 @@ def static_visualization_page():
     plot_year_usage(loaded_statistics)
     plot_entropy_distribution(loaded_statistics)
 
-
     # New plots
     plot_average_numbers_by_length(loaded_statistics, 'Numbers')
     plot_average_numbers_by_length(loaded_statistics, 'Upper Case Letters')
+    plot_average_numbers_by_length(loaded_statistics, 'Lower Case Letters')
     plot_average_numbers_by_length(loaded_statistics, 'Special Characters')
 
     # Input for specific password length
     st.header('Character Counts for Specific Password Length')
-    st.write("Enter a password length to see the average counts and distributions of upper letters, special characters, and numbers.")
+    st.write("Enter a password length to see the average counts and distributions of upper letters, lower letters, special characters, and numbers.")
 
     length = st.number_input('Password Length:', min_value=1, max_value=30, value=8, step=1)
 
