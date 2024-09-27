@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from PIL import Image
-# from website_static_clusters import static_clusters_page
-# from website_dynamic_clusters import dynamic_clusters_page
+from website_static_clusters import static_clusters_page
+from website_dynamic_clusters import dynamic_clusters_page
 from website_static_visualizations import static_visualization_page
 from website_dynamic_visualizations import dynamic_visualization_page
 def main():
@@ -41,11 +41,11 @@ def main():
         dynamic_visualization_page()
         # You can process the password input as needed
 
-    # elif page == 'Clustering Analysis':
-    #     static_clusters_page()
+    elif page == 'Clustering Analysis':
+        static_clusters_page()
 
-    # elif page == 'Insert Password for Clustering Analysis':
-    #     dynamic_clusters_page()
+    elif page == 'Insert Password for Clustering Analysis':
+        dynamic_clusters_page()
 
 if __name__ == "__main__":
     main()

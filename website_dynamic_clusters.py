@@ -1,11 +1,14 @@
 import streamlit as st
 import json
 import plotly.express as px
+import plotly.graph_objs as go
 import pandas as pd
 from password_statistics import calculate_entropy
-from datasketch import MinHash, MinHashLSH
+from datasketch import MinHash
 import math
 import os
+import numpy as np
+from sklearn.manifold import MDS
 
 # Function to load n-gram probabilities from JSON
 def load_ngram_probabilities(ngram_prob_path):
@@ -27,7 +30,6 @@ def calculate_ngram_log_likelihood(s, ngram_probs, n=2, smoothing=1e-10):
             prob = smoothing
         log_likelihood_value += math.log(prob)
     return log_likelihood_value
-
 
 def find_nearest_ngram_cluster(password_ll, ngram_clusters):
     """
@@ -126,15 +128,16 @@ def create_ngram_cluster_dataframe(clusters, user_cluster_key, ngram_probs, n=2)
     df = df.sort_values(by='Log Likelihood')
     return df
 
-def visualize_ngram_clusters(df):
+def visualize_ngram_clusters(df, threshold):
     """
-    Create a scatter plot for n-gram clusters, highlighting the user's cluster.
+    Create a scatter plot for n-gram clusters, highlighting the user's cluster,
+    and include the threshold as a vertical line.
     """
     fig = px.scatter(
         df,
         x='Log Likelihood',
         y='Cluster Size',
-        title="Password Clusters by N-gram Log-Likelihood",
+        title=f"Password Clusters by N-gram Log-Likelihood (Threshold: {threshold:.2f})",
         labels={'Log Likelihood': 'N-gram Log-Likelihood', 'Cluster Size': 'Number of Passwords'},
         size='Cluster Size',
         size_max=20,
@@ -155,8 +158,16 @@ def visualize_ngram_clusters(df):
         customdata=df[['Sample Passwords']].values
     )
 
-    return fig
+    # Add a vertical line for the threshold
+    fig.add_vline(
+        x=threshold,
+        line_color='red',
+        line_dash="dash",
+        annotation_text="Threshold",
+        annotation_position="top right"
+    )
 
+    return fig
 
 # Function to find the nearest entropy cluster
 def find_nearest_entropy_cluster(password_entropy, clusters):
@@ -244,6 +255,28 @@ def find_and_show_closest_minhash_cluster(input_string, clusters, top_n=10, num_
 
     return [], None
 
+def find_closest_minhash_cluster_label(input_string, clusters, num_perm=128):
+    """
+    Find the label of the closest cluster by MinHash similarity.
+    """
+    input_minhash = get_minhash(input_string, num_perm=num_perm)
+    closest_cluster_label = None
+    max_similarity = -1  # Similarity starts from 0 and goes up to 1
+
+    # Step 1: Compare input MinHash with each cluster's MinHash to find the closest one
+    for cluster_label, cluster_members in clusters.items():
+        if not cluster_members:
+            continue  # Skip empty clusters
+        # Use the first password to represent the cluster
+        cluster_minhash = get_minhash(cluster_members[0], num_perm=num_perm)
+        similarity = input_minhash.jaccard(cluster_minhash)
+        
+        if similarity > max_similarity:
+            max_similarity = similarity
+            closest_cluster_label = cluster_label
+
+    return closest_cluster_label, max_similarity
+
 def plot_entropy(password, entropy_clusters):
     # Calculate the entropy of the input password
     password_entropy = calculate_entropy(password)
@@ -324,23 +357,28 @@ def plot_minhash(password, minhash_clusters):
     else:
         st.write("No similar passwords found in the nearest MinHash cluster.")
 
-def plot_ngram(password, ngram_clusters, ngram_probs):
-    # Define the charset and n for n-grams
-    charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~!@#$%^&*()_+{}[]:\";'<>?,./\\|` "
-    n = 2  # Assuming 2-grams; adjust if necessary
+def plot_ngram(password, ngram_clusters_json, ngram_probs):
+    # Get threshold from the JSON data
+    threshold = ngram_clusters_json.get('Threshold', None)
+    ngram_clusters = ngram_clusters_json.get('Clusters', {})
+
+    # Define n for n-grams
+    n = 2  # Adjust if necessary
+
     # Calculate n-gram log-likelihood and find the nearest n-gram cluster
     password_ngram_ll = calculate_ngram_log_likelihood(password, ngram_probs, n, smoothing=1e-10)
     nearest_ngram_cluster_key = find_nearest_ngram_cluster(password_ngram_ll, ngram_clusters)
     closest_ngram_passwords, closest_ngram_ll = find_and_show_closest_ngram_cluster(
         password, ngram_clusters, ngram_probs, top_n=10, n=2, smoothing=1e-10
     )
+
     # Prepare data for n-gram visualization
     ngram_df = create_ngram_cluster_dataframe(ngram_clusters, nearest_ngram_cluster_key, ngram_probs, n=2)
 
     # Check if the DataFrame is not empty before plotting
     if not ngram_df.empty:
-        # Visualize n-gram clusters, highlighting the user's cluster in red
-        ngram_fig = visualize_ngram_clusters(ngram_df)
+        # Visualize n-gram clusters, including the threshold
+        ngram_fig = visualize_ngram_clusters(ngram_df, threshold)
         st.plotly_chart(ngram_fig, use_container_width=True)
     else:
         st.warning("No n-gram clusters available for visualization.")
@@ -357,6 +395,120 @@ def plot_ngram(password, ngram_clusters, ngram_probs):
     else:
         st.write("No similar passwords found in the nearest n-gram cluster.")
 
+# New functions for loading and visualizing clusters with similarities
+def load_clusters_and_similarities(json_file):
+    with open(json_file, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    clusters = data['Clusters']
+    similarities = data['Cluster Similarities']
+    return clusters, similarities
+
+def get_top_k_clusters(clusters, similarities, top_k=10, include_clusters=None):
+    # Sort clusters by size
+    sorted_clusters = sorted(clusters.items(), key=lambda x: len(x[1]), reverse=True)
+    # Ensure include_clusters are in the list
+    if include_clusters is not None:
+        # Move included clusters to the front
+        included = [item for item in sorted_clusters if item[0] in include_clusters]
+        others = [item for item in sorted_clusters if item[0] not in include_clusters]
+        sorted_clusters = included + others
+
+    # Take the top K clusters
+    top_clusters = sorted_clusters[:top_k]
+
+    # Now, extract the data
+    cluster_names = [cluster[0] for cluster in top_clusters]
+    cluster_sizes = np.array([len(cluster[1]) for cluster in top_clusters])
+    cluster_examples = [cluster[1][:3] for cluster in top_clusters]
+
+    # Build the similarity matrix
+    num_clusters = len(cluster_names)
+    similarity_matrix = np.ones((num_clusters, num_clusters))
+
+    for i, cluster_i in enumerate(cluster_names):
+        for j, cluster_j in enumerate(cluster_names):
+            if i != j:
+                pair_key = f"{cluster_i} vs {cluster_j}"
+                similarity = similarities.get(pair_key, None)
+                if similarity is not None:
+                    similarity_matrix[i, j] = 1 - similarity  # Convert similarity to distance
+                else:
+                    similarity_matrix[i, j] = 1  # Max distance if similarity not found
+    similarity_matrix = make_symmetric(similarity_matrix)
+    return cluster_names, cluster_sizes, cluster_examples, similarity_matrix
+
+def make_symmetric(matrix):
+    """Ensure the matrix is symmetric."""
+    sym_matrix = np.copy(matrix)
+    for i in range(len(matrix)):
+        for j in range(i + 1, len(matrix)):
+            sym_matrix[j, i] = sym_matrix[i, j]
+    # Ensure diagonal is 0 (as it represents the distance of a cluster with itself)
+    np.fill_diagonal(sym_matrix, 0)
+    return sym_matrix
+
+def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarity_matrix, user_cluster_label=None):
+    # Perform multidimensional scaling (MDS) to convert similarity matrix to 2D positions
+    mds = MDS(n_components=2, dissimilarity='precomputed', random_state=42)
+    positions = mds.fit_transform(similarity_matrix)
+
+    # Calculate marker sizes so that marker areas are proportional to cluster sizes
+    scaling_factor = 2  # Adjust this value to scale marker sizes for better visualization
+    marker_sizes = np.sqrt(cluster_sizes) * scaling_factor
+
+    # Create a DataFrame for plotting
+    plot_df = pd.DataFrame({
+        'x': positions[:, 0],
+        'y': positions[:, 1],
+        'Cluster Name': cluster_names,
+        'Cluster Size': cluster_sizes,
+        'Examples': cluster_examples,
+    })
+
+    # Determine colors
+    plot_df['Color'] = plot_df['Cluster Name'].apply(
+        lambda x: 'User Cluster' if x == user_cluster_label else 'Other Clusters'
+    )
+
+    # Create hover text
+    plot_df['Hover Text'] = plot_df.apply(
+        lambda row: f"<b>{row['Cluster Name']}</b><br>Size: {row['Cluster Size']}<br><b>Examples:</b><br>{'<br>'.join(row['Examples'])}",
+        axis=1
+    )
+
+    # Create a scatter plot using Plotly Express
+    fig = px.scatter(
+        plot_df,
+        x='x',
+        y='y',
+        size='Cluster Size',
+        size_max=20,
+        color='Color',
+        color_discrete_map={'User Cluster': 'red', 'Other Clusters': 'blue'},
+        hover_name='Cluster Name',
+        hover_data={'Cluster Size': True, 'Examples': True},
+    )
+
+    # Update hover template to use the custom hover text
+    fig.update_traces(
+        hovertemplate='%{customdata}<extra></extra>',
+        customdata=plot_df['Hover Text']
+    )
+
+    # Update layout for aesthetics
+    fig.update_layout(
+        title="Visualization of Top Clusters by Size and Similarity",
+        xaxis_title="MDS Dimension 1",
+        yaxis_title="MDS Dimension 2",
+        template="plotly_white",
+        width=900,
+        height=700,
+        showlegend=False  # Hide legend if desired
+    )
+
+    # Show the interactive plot using Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
 def dynamic_clusters_page():
     # Page for inserting a password
     st.header('Insert Password for Clustering Analysis')
@@ -372,11 +524,13 @@ def dynamic_clusters_page():
     minhash_json_name = 'minhash_clusters.json'
     ngram_prob_name = 'ngram_probs.json'
     ngram_clusters_name = 'ngram_clusters.json'
+    minhash_similarity_json_name = 'minhash_clusters_with_similarity.json' 
 
     entropy_json_path = os.path.join(json_files_path, entropy_json_name)
     ngram_clusters_path = os.path.join(json_files_path, ngram_clusters_name)
     ngram_prob_path = os.path.join(json_files_path, ngram_prob_name)
     minhash_json_path = os.path.join(json_files_path, minhash_json_name)
+    minhash_similarity_json_path = os.path.join(json_files_path, minhash_similarity_json_name)
 
     # Load JSON data
     with open(entropy_json_path, 'r', encoding='utf-8') as json_file:
@@ -387,17 +541,70 @@ def dynamic_clusters_page():
 
     with open(ngram_clusters_path, 'r', encoding='utf-8') as json_file:
         ngram_clusters_json = json.load(json_file)
-        # Access the clusters under the 'Clusters' key
-        ngram_clusters = ngram_clusters_json.get('Clusters', {})
 
     """ Entropy Clustering """
     plot_entropy(password, entropy_clusters)
 
-    """ MinHash Clustering """
-    plot_minhash(password, minhash_clusters)
-
     """ N-gram Clustering """
     # Load n-gram probabilities
     ngram_probs = load_ngram_probabilities(ngram_prob_path)
-    plot_ngram(password, ngram_clusters, ngram_probs)
-    
+    plot_ngram(password, ngram_clusters_json, ngram_probs)
+
+    """ MinHash Clustering """
+    st.subheader("MinHash Clusters Visualization")
+
+    # Let the user select the number of top clusters to display
+    top_k = st.slider('Select number of top clusters to display', min_value=5, max_value=50, value=10, step=5)
+
+    # Load clusters and similarities
+    if os.path.exists(minhash_similarity_json_path):
+        clusters, similarities = load_clusters_and_similarities(minhash_similarity_json_path)
+
+        # Find the closest MinHash cluster to the user's password
+        closest_cluster_label, max_similarity = find_closest_minhash_cluster_label(password, clusters)
+
+        if max_similarity == 0:
+            # No similar cluster found, create a new cluster for the user's password
+            user_cluster_label = 'User Password'
+            clusters[user_cluster_label] = [password]
+
+            # Get top clusters without including any specific clusters
+            cluster_names, cluster_sizes, cluster_examples, similarity_matrix = get_top_k_clusters(
+                clusters, similarities, top_k=top_k)
+
+            # Add the user's cluster to the data
+            cluster_names.append(user_cluster_label)
+            cluster_sizes = np.append(cluster_sizes, 1)
+            cluster_examples.append([password])
+
+            # Compute similarities between user's password and existing clusters
+            user_similarities = []
+            input_minhash = get_minhash(password)
+            for cluster_label in cluster_names[:-1]:  # Exclude the user's cluster itself
+                cluster_minhash = get_minhash(clusters[cluster_label][0])
+                sim = input_minhash.jaccard(cluster_minhash)
+                user_similarities.append(1 - sim)  # Distance
+
+            # Now, update the similarity_matrix to include the new cluster
+            new_row = np.array(user_similarities + [0])  # Similarity with self is 0
+            similarity_matrix = np.vstack([similarity_matrix, new_row[:-1]])
+            new_col = np.append(new_row, 0)[:, np.newaxis]
+            similarity_matrix = np.hstack([similarity_matrix, new_col])
+
+            # Update the closest cluster label to 'User Password' to color it differently
+            closest_cluster_label = user_cluster_label
+        else:
+            # Ensure the closest cluster is included
+            cluster_names, cluster_sizes, cluster_examples, similarity_matrix = get_top_k_clusters(
+                clusters, similarities, top_k=top_k, include_clusters=[closest_cluster_label])
+
+        # Now, proceed to visualize
+        visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarity_matrix, closest_cluster_label)
+    else:
+        st.warning("MinHash clusters with similarities file not found.")
+
+    plot_minhash(password, minhash_clusters)
+
+# Call the main function to display the page
+if __name__ == "__main__":
+    dynamic_clusters_page()

@@ -221,8 +221,8 @@ if __name__ == "__main__":
     passwords, statistics = ps.analyze_passwords(dataset_name)
 
     """ Cluster strings by entropy and Find and show closest cluster"""
-    cluster_strings_by_entropy = cluster_strings_by_entropy(passwords, entropy_threshold=0.5)
-    # closest_passwords = find_and_show_closest_cluster("ExamplePassword123", cluster_strings_by_entropy, top_n=10)
+    # cluster_strings_by_entropy = cluster_strings_by_entropy(passwords, entropy_threshold=0.5)
+    
 
     """ Cluster strings with MinHash """
-    clusters_minhash = cluster_strings_with_minhash_lsh(passwords, threshold=0.5, num_perm=128)
+    clusters_minhash, _ = cluster_strings_with_minhash_lsh(passwords, threshold=0.5, num_perm=128, top_k=100)

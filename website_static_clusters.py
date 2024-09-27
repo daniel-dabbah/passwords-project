@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import os
+from sklearn.manifold import MDS  # Added for multidimensional scaling
 
 def plot_entropy_vs_likelihood_by_cluster(cluster_json):
     # Load the cluster data from the JSON file
@@ -91,7 +92,7 @@ def plot_entropy_clusters(entropy_clusters):
                 The table below provides a detailed view of the clusters, including the entropy value, cluster size, and sample passwords. 
                 The sample passwords are representative of the passwords in each cluster. 
                 The clusters in the table are sorted by entropy in ascending order. 
-                you can explore the distribution of password entropy values and the corresponding cluster sizes. \n
+                You can explore the distribution of password entropy values and the corresponding cluster sizes. \n
              
                 It can be seen that most passwords fall within the lower entropy range, indicating weaker password strength. \n
         """)
@@ -110,15 +111,14 @@ def plot_ngram_clusters(ngram_clusters):
         average_likelihood = cluster['Average Log Likelihood']
         classification = cluster['Classification']
         passwords = cluster['Passwords']
-        sample_passwords = [p['Password'] for p in passwords[:3]]  # Get up to 3 sample passwords
+        # Get up to 3 sample passwords
+        sample_passwords = [p['Password'] for p in passwords[:3]]
         ngram_data_list.append({
             'Log Likelihood': float(log_likelihood),
             'Average Log Likelihood': average_likelihood,
             'Classification': classification,
             'Cluster Size': len(passwords),
-            'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
-            'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
-            'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
+            'Sample Passwords': '<br>'.join(sample_passwords)  # Combine sample passwords for hover
         })
 
     # Create a DataFrame for Plotly
@@ -126,31 +126,45 @@ def plot_ngram_clusters(ngram_clusters):
     ngram_df = ngram_df.sort_values(by='Log Likelihood', ascending=False)  # Sort DataFrame by Log Likelihood
 
     # Create an interactive scatter plot for n-gram clusters
-    ngram_fig = px.scatter(ngram_df, x='Log Likelihood', y='Cluster Size',
-                           title=f"Password Clusters by N-gram Log Likelihood (Threshold: {threshold:.2f})",
-                           labels={'Log Likelihood': 'Log Likelihood Value', 'Cluster Size': 'Number of Passwords'},
-                           size='Cluster Size', size_max=20,
-                           color='Cluster Size', 
-                           color_continuous_scale=px.colors.sequential.Viridis)
+    ngram_fig = px.scatter(
+        ngram_df, 
+        x='Log Likelihood', 
+        y='Cluster Size',
+        title=f"Password Clusters by N-gram Log Likelihood (Threshold: {threshold:.2f})",
+        labels={'Log Likelihood': 'Log Likelihood Value', 'Cluster Size': 'Number of Passwords'},
+        size='Cluster Size', 
+        size_max=20,
+        color='Cluster Size',
+        color_continuous_scale=px.colors.sequential.Viridis
+    )
 
+    # Update the hover template to include the sample passwords
     ngram_fig.update_traces(
         hovertemplate=(
-            '<b>Average Log Likelihood:</b> %{customdata[0]:.2f}<br>'
-            '<b>Classification:</b> %{customdata[1]}<br>'
+            '<b>Log Likelihood:</b> %{x:.2f}<br>'
             '<b>Cluster Size:</b> %{y}<br>'
+            '<b>Classification:</b> %{customdata[0]}<br>'
+            '<b>Sample Passwords:</b><br>%{customdata[1]}<br>'
             '<extra></extra>'
         ),
-        customdata=ngram_df[['Average Log Likelihood', 'Classification']].values,
+        customdata=ngram_df[['Classification', 'Sample Passwords']].values  # Add sample passwords to customdata
     )
 
     # Add a vertical line for the threshold
-    ngram_fig.add_vline(x=threshold, line_color='red', line_dash="dash", annotation_text="Threshold", annotation_position="top right")
+    ngram_fig.add_vline(
+        x=threshold, 
+        line_color='red', 
+        line_dash="dash", 
+        annotation_text="Threshold", 
+        annotation_position="top right"
+    )
 
-    st.plotly_chart(ngram_fig)  # Display the Plotly chart
+    # Display the Plotly chart
+    st.plotly_chart(ngram_fig)
 
-    # Detailed N-gram Clusters
+    # Display the clusters in a table
     st.subheader('N-gram Clusters Table')
-    st.dataframe(ngram_df[['Average Log Likelihood', 'Classification', 'Cluster Size', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
+    st.dataframe(ngram_df[['Average Log Likelihood', 'Classification', 'Cluster Size', 'Sample Passwords']])
 
 
 def plot_minhash_clusters(minhash_clusters):
@@ -170,39 +184,103 @@ def plot_minhash_clusters(minhash_clusters):
     # Create a DataFrame for MinHash clusters
     minhash_df = pd.DataFrame(minhash_cluster_data)
 
-    # Create a scatter plot for MinHash clusters colored by cluster size
-    minhash_fig = px.scatter(minhash_df, x='Cluster Label', y='Cluster Size',
-                            title="Password Clusters by MinHash",
-                            labels={'Cluster Size': 'Number of Passwords'},
-                            size='Cluster Size', size_max=20,
-                            color='Cluster Size',  # Color by cluster size
-                            color_continuous_scale=px.colors.sequential.Viridis)  # Optional color scale
-
-    # Update the hover data for MinHash clusters
-    minhash_fig.update_traces(
-        hovertemplate=(
-            '<b>Cluster:</b> %{x}<br>'  # Display cluster label
-            '<b>Cluster Size:</b> %{y}<br>'  # Display number of passwords
-            '<b>Sample Passwords:</b><br>%{hovertext}'  # Display sample passwords
-            '<extra></extra>'
-        ),
-        hovertext=minhash_df[['Sample Password 1', 'Sample Password 2', 'Sample Password 3']].apply(lambda x: '<br>'.join(x), axis=1)  # Unique sample passwords for each cluster
-    )
-
-    # Remove the legend and x-axis labels
-    minhash_fig.for_each_trace(lambda t: t.update(legendgroup=None))
-    minhash_fig.update_layout(xaxis_title="", showlegend=False)
-
-    # Remove x-axis tick labels
-    minhash_fig.update_xaxes(tickvals=[], ticktext=[])
-
-    # Display the MinHash plot
-    st.plotly_chart(minhash_fig)  # Display the MinHash scatter plot
-
-    # Optional: Display the clusters and sample passwords in a table below the plot
+    # Display only the clusters and sample passwords in a table
     st.subheader('MinHash Clusters Table')
     st.dataframe(minhash_df[['Cluster Label', 'Cluster Size', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
 
+
+# New functions for loading and visualizing clusters with similarities
+def load_clusters_and_similarities(json_file):
+    with open(json_file, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    clusters = data['Clusters']
+    similarities = data['Cluster Similarities']
+    return clusters, similarities
+
+def get_top_k_clusters(clusters, similarities, top_k=10):
+    # Sort clusters by size and take the top K largest
+    sorted_clusters = sorted(clusters.items(), key=lambda x: len(x[1]), reverse=True)[:top_k]
+    
+    # Get the cluster names, sizes, and example passwords
+    cluster_names = [cluster[0] for cluster in sorted_clusters]
+    cluster_sizes = np.array([len(cluster[1]) for cluster in sorted_clusters])
+    cluster_examples = [cluster[1][:3] for cluster in sorted_clusters]  # Get first 3 passwords as examples
+
+    # Extract the relevant similarities between the top K clusters
+    similarity_matrix = np.ones((top_k, top_k))  # Initialize similarity matrix with ones (maximum distance)
+    
+    for i, cluster_i in enumerate(cluster_names):
+        for j, cluster_j in enumerate(cluster_names):
+            if i != j:
+                pair_key = f"{cluster_i} vs {cluster_j}"
+                similarity = similarities.get(pair_key, None)
+                if similarity is not None:
+                    similarity_matrix[i, j] = 1 - similarity  # Convert similarity to distance
+                else:
+                    similarity_matrix[i, j] = 1  # Assume maximum distance if similarity not found
+    
+    # Make the similarity matrix symmetric and ensure diagonal is 0
+    similarity_matrix = make_symmetric(similarity_matrix)
+
+    return cluster_names, cluster_sizes, cluster_examples, similarity_matrix
+
+def make_symmetric(matrix):
+    """Ensure the matrix is symmetric."""
+    sym_matrix = np.copy(matrix)
+    for i in range(len(matrix)):
+        for j in range(i + 1, len(matrix)):
+            sym_matrix[j, i] = sym_matrix[i, j]
+    # Ensure diagonal is 0 (as it represents the distance of a cluster with itself)
+    np.fill_diagonal(sym_matrix, 0)
+    return sym_matrix
+
+def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarity_matrix):
+    # Perform multidimensional scaling (MDS) to convert similarity matrix to 2D positions
+    mds = MDS(n_components=2, dissimilarity='precomputed', random_state=42)
+    positions = mds.fit_transform(similarity_matrix)
+
+    # Calculate marker sizes so that marker areas are proportional to cluster sizes
+    scaling_factor = 2  # Adjust this value to scale marker sizes for better visualization
+    marker_sizes = np.sqrt(cluster_sizes) * scaling_factor
+
+    # Create hover text including cluster name, size, and example passwords
+    hover_text = []
+    for name, size, examples in zip(cluster_names, cluster_sizes, cluster_examples):
+        example_passwords = "<br>".join(examples)
+        text = f"<b>{name}</b><br>Size: {size}<br><b>Examples:</b><br>{example_passwords}"
+        hover_text.append(text)
+
+    # Create a scatter plot using Plotly
+    fig = go.Figure()
+
+    # Add scatter points for clusters
+    fig.add_trace(go.Scatter(
+        x=positions[:, 0],
+        y=positions[:, 1],
+        mode='markers',
+        marker=dict(
+            size=marker_sizes,  # Marker sizes proportional to sqrt(cluster_sizes)
+            color=cluster_sizes,        # Color based on cluster sizes
+            colorscale='Viridis',
+            showscale=True,
+            colorbar=dict(title="Cluster Size")
+        ),
+        text=hover_text,  # Add hover text
+        hoverinfo='text',  # Display text on hover
+    ))
+
+    # Update layout for aesthetics
+    fig.update_layout(
+        title="Visualization of Top Clusters by Size and Similarity",
+        xaxis_title="MDS Dimension 1",
+        yaxis_title="MDS Dimension 2",
+        template="plotly_white",
+        width=900,
+        height=700
+    )
+
+    # Show the interactive plot using Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
 def static_clusters_page():
 
@@ -210,10 +288,12 @@ def static_clusters_page():
     entropy_json_name = 'entropy_clusters.json'
     ngram_json_name = 'ngram_clusters.json'
     minhash_json_name = 'minhash_clusters.json'
+    minhash_similarity_json_name = 'minhash_clusters_with_similarity.json'  # Added for similarity visualization
 
     entropy_json_path = os.path.join(json_files_path, entropy_json_name)
     ngram_json_path = os.path.join(json_files_path, ngram_json_name)
     minhash_json_path = os.path.join(json_files_path, minhash_json_name)
+    minhash_similarity_json_path = os.path.join(json_files_path, minhash_similarity_json_name)
 
     # Load the entropy dictionary from the JSON file
     with open(entropy_json_path, 'r', encoding='utf-8') as json_file:
@@ -234,12 +314,12 @@ def static_clusters_page():
     st.header('Clustering by Entropy')
     st.write("""
              Entropy represents the measure of unpredictability or randomness in a password. \n
-             it reflects how resistant a password is to being guessed or cracked. \n
-             the more diverse the character set used— including lowercase letters, uppercase letters, numbers, and special symbols, \n
-             the higher the entropy, making the password significantly more secure. 
-             the entropy is calculated using the formula: entropy = log2(possible combinations). \n
+             It reflects how resistant a password is to being guessed or cracked. \n
+             The more diverse the character set used—including lowercase letters, uppercase letters, numbers, and special symbols,\n
+             the higher the entropy, making the password significantly more secure.
+             The entropy is calculated using the formula: entropy = log2(possible combinations). \n
 
-             to ensure robust security, it is recommended that a password achieve at least 80 bits of entropy, \n
+             To ensure robust security, it is recommended that a password achieve at least 80 bits of entropy,\n
              typically requiring a length of at least 12 characters that utilize a blend of all character types. \n
         """)
     plot_entropy_clusters(entropy_clusters)
@@ -249,18 +329,18 @@ def static_clusters_page():
     st.header('Clustering by N-gram Log-Likelihood')
     st.write("""
               N-gram Model: We break down passwords into sequences of 2 characters (bi-grams) to capture common patterns in character combinations.\n
-                Log-likelihood Calculation: Each password is evaluated against the n-gram model, calculating its likelihood based on how closely it matches common patterns from a meaningful password dataset.\n
-             Clustering: Passwords with similar log-likelihoods are grouped together into clusters, where each cluster represents passwords that have similar structural patterns. \n
-                Classification: Clusters are classified as either 'Meaningful' or 'Gibberish' based on their average log-likelihood values. \n
-                Threshold: A threshold is set to distinguish between 'Meaningful' and 'Gibberish' clusters. \n
-                The scatter plot below visualizes the clustering of passwords based on their n-gram log-likelihood values. \n
-                Each point represents a cluster of passwords with a specific log-likelihood value. \n
-                The size of the point corresponds to the number of passwords in the cluster. \n
-                Hover over the points to view the average log-likelihood, classification, cluster size, and sample passwords. \n
-                The red dashed line represents the threshold used to classify clusters as 'Meaningful' or 'Gibberish'. \n
-                The table below provides a detailed view of the clusters, including the average log-likelihood, classification, cluster size, and sample passwords. \n
-                The clusters in the table are sorted by log-likelihood in descending order. \n
-                You can explore the distribution of n-gram log-likelihood values and the corresponding cluster sizes. \n
+              Log-likelihood Calculation: Each password is evaluated against the n-gram model, calculating its likelihood based on how closely it matches common patterns from a meaningful password dataset.\n
+              Clustering: Passwords with similar log-likelihoods are grouped together into clusters, where each cluster represents passwords that have similar structural patterns. \n
+              Classification: Clusters are classified as either 'Meaningful' or 'Gibberish' based on their average log-likelihood values. \n
+              Threshold: A threshold is set to distinguish between 'Meaningful' and 'Gibberish' clusters. \n
+              The scatter plot below visualizes the clustering of passwords based on their n-gram log-likelihood values. \n
+              Each point represents a cluster of passwords with a specific log-likelihood value. \n
+              The size of the point corresponds to the number of passwords in the cluster. \n
+              Hover over the points to view the average log-likelihood, classification, cluster size, and sample passwords. \n
+              The red dashed line represents the threshold used to classify clusters as 'Meaningful' or 'Gibberish'. \n
+              The table below provides a detailed view of the clusters, including the average log-likelihood, classification, cluster size, and sample passwords. \n
+              The clusters in the table are sorted by log-likelihood in descending order. \n
+              You can explore the distribution of n-gram log-likelihood values and the corresponding cluster sizes. \n
              """)
     plot_ngram_clusters(ngram_clusters)
     
@@ -269,7 +349,7 @@ def static_clusters_page():
     st.header('Clustering by MinHash')
     st.write("""
             MinHash is a technique used to efficiently estimate the similarity between sets. 
-            For passwords, it allows us to compare them based on the similarity of their character sets.
+            For passwords, it allows us to compare them based on the similarity of their character sets.\n
             Hashing Passwords: Each password is hashed into a compact MinHash signature, capturing the essential information of its character set. \n
             Similarity Calculation: Passwords with similar MinHash signatures are grouped into clusters. 
             These clusters represent groups of passwords with overlapping character sets, making them structurally similar.\n
@@ -281,8 +361,29 @@ def static_clusters_page():
             You can explore the distribution of MinHash clusters and the corresponding cluster sizes. \n
              """)
 
-    plot_minhash_clusters(minhash_clusters)
 
+    """ MinHash Clusters Visualization with Similarity """
+    st.subheader('MinHash Clusters Visualization with Similarity')
+    st.write("""
+            This visualization shows the top clusters based on MinHash similarity.
+            Clusters are positioned based on their similarities; closer clusters are more similar.
+            The size and color of each point correspond to the cluster size.
+            """)
+
+    # Let the user select the number of top clusters to display
+    top_k = st.slider('Select number of top clusters to display', min_value=5, max_value=100, value=10, step=5)
+
+    # Load clusters and similarities
+    if os.path.exists(minhash_similarity_json_path):
+        clusters, similarities = load_clusters_and_similarities(minhash_similarity_json_path)
+
+        cluster_names, cluster_sizes, cluster_examples, similarity_matrix = get_top_k_clusters(
+            clusters, similarities, top_k=top_k)
+
+        visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarity_matrix)
+    else:
+        st.warning("MinHash clusters with similarities file not found.")
+    plot_minhash_clusters(minhash_clusters)
 
     """ Entropy vs Log-Likelihood Correlation """
     st.header('Entropy vs Log-Likelihood Correlation')
@@ -293,3 +394,7 @@ def static_clusters_page():
             indicating a correlation between password strength (entropy) and predictability (log-likelihood).
              """)
     plot_entropy_vs_likelihood_by_cluster(ngram_json_path)
+
+# Call the main function to display the page
+if __name__ == "__main__":
+    static_clusters_page()
