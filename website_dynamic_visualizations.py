@@ -658,10 +658,12 @@ def dynamic_visualization_page():
 
     plot_year_usage_histogram(loaded_statistics, user_years)
     plot_entropy_distribution(loaded_statistics, entropy_value)
-    plot_number_position_violin(loaded_statistics, user_number_positions)
-    plot_special_character_position_violin(loaded_statistics, user_special_positions)
-    if password_info and user_special_chars:
-        plot_specific_special_character_positions(loaded_statistics, user_special_chars)
-    plot_special_characters_by_length(loaded_statistics)
     display_password_strength_feedback(entropy_value)
+    
+    # plot_number_position_violin(loaded_statistics, user_number_positions)
+    # plot_special_character_position_violin(loaded_statistics, user_special_positions)
+    # if password_info and user_special_chars:
+    #     plot_specific_special_character_positions(loaded_statistics, user_special_chars)
+    # plot_special_characters_by_length(loaded_statistics)
+    
 
