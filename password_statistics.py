@@ -1,3 +1,5 @@
+import json
+import os
 import matplotlib
 from tqdm import tqdm
 import string
@@ -502,3 +504,49 @@ def analyze_passwords(file_path):
 
         "char_probabilities_for_log_likelihood": char_probabilities_for_log_likelihood
     }
+
+
+if __name__ == '__main__':
+    # Create the directory if it doesn't exist
+    os.makedirs('generated_data', exist_ok=True)
+
+    dataset_name = 'rockyou2024-100K.txt'
+    passwords, statistics = analyze_passwords(dataset_name)
+
+    # Prepare data for JSON serialization
+    # Convert any non-serializable data types to JSON-compatible types
+
+    # Convert sets to lists
+    for key in statistics:
+        if isinstance(statistics[key], set):
+            statistics[key] = list(statistics[key])
+        elif isinstance(statistics[key], dict):
+            # Ensure all keys are strings
+            statistics[key] = {str(k): v for k, v in statistics[key].items()}
+
+    # For 'special_char_positions_per_char', ensure each value is a list of lists
+    for char in statistics['special_char_positions_per_char']:
+        positions = statistics['special_char_positions_per_char'][char]
+        # positions might be a list of tuples; convert to list of lists
+        statistics['special_char_positions_per_char'][char] = [list(pos) for pos in positions]
+
+    # For 'number_positions' and 'special_char_positions', ensure they are lists of dicts
+    # If they are lists of tuples, convert them to lists of lists
+    statistics['number_positions'] = [list(pos) for pos in statistics['number_positions']]
+    statistics['special_char_positions'] = [list(pos) for pos in statistics['special_char_positions']]
+
+    # For 'entropies' and 'entropy_by_length', ensure they are serializable
+    # 'entropy_by_length' is a dict of lists
+    statistics['entropy_by_length'] = {str(k): v for k, v in statistics['entropy_by_length'].items()}
+
+    # Prepare the data to save
+    data_to_save = {
+        'passwords': passwords,
+        'statistics': statistics
+    }
+
+    # Save data to JSON file
+    with open(f'{dataset_name}_data_passwords_statistics.json', 'w') as f:
+        json.dump(data_to_save, f)
+
+    print(f"Data saved to {dataset_name}_data_passwords_statistics.json")

@@ -1,3 +1,4 @@
+
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,17 +8,13 @@ from website_static_clusters import static_clusters_page
 from website_dynamic_clusters import dynamic_clusters_page
 from website_static_visualizations import static_visualization_page
 from website_dynamic_visualizations import dynamic_visualization_page
-
-
 def main():
     st.set_page_config(layout="wide")  # Set the layout to wide to make the margin thinner
     st.title('Password Project')
 
     # Sidebar with page options
     page = st.sidebar.radio(
-        'Choose a Page',
-        ['Password Analysis: A Visual Dashboard Overview', 'Insert Your Password', 'Clustering Analysis',
-         'Insert Password for Clustering Analysis'])
+        'Choose a Page', ['Password Analysis: A Visual Dashboard Overview', 'Insert Your Password', 'Clustering Analysis','Insert Password for Clustering Analysis'])
 
     if page == 'Password Analysis: A Visual Dashboard Overview':
         st.header('Password Analysis: A Visual Dashboard Overview')
@@ -29,18 +26,18 @@ def main():
         - **Histogram Analysis**: We create detailed visualizations of password frequency and robustness to pinpoint prevalent vulnerabilities.
         - **K-Nearest Neighbors (KNN)**: Utilizing advanced KNN techniques, we classify password strengths and model predictions on potential breach impacts.
         - **Comparative Metrics**: By comparing password security across different data breaches, we derive insights that inform robust cybersecurity strategies.
-
+        
         Our objective is to offer a nuanced understanding of password security dynamics and to suggest enhanced strategies for safeguarding data against breaches.
         """)
 
         static_visualization_page()
+        
 
-
-
+        
 
     elif page == 'Insert Your Password':
         st.header('Insert Your Password')
-
+        
         dynamic_visualization_page()
         # You can process the password input as needed
 
@@ -49,7 +46,6 @@ def main():
 
     elif page == 'Insert Password for Clustering Analysis':
         dynamic_clusters_page()
-
 
 if __name__ == "__main__":
     main()
