@@ -20,13 +20,15 @@ def plot_entropy_vs_likelihood_by_cluster(cluster_json):
         classification = cluster_info['Classification']
         cluster_size = len(cluster_info['Passwords'])  # Use cluster size for size scaling
         
-        entropy_likelihood_data.append({
-            'Cluster': cluster_key,
-            'Average Log Likelihood': avg_likelihood,
-            'Average Entropy': avg_entropy,
-            'Classification': classification,
-            'Cluster Size': cluster_size
-        })
+        # Filter: Only include clusters with size > 100, entropy < 200, and log-likelihood > -500
+        if cluster_size > 100 and avg_entropy < 200 and avg_likelihood > -500:
+            entropy_likelihood_data.append({
+                'Cluster': cluster_key,
+                'Average Log Likelihood': avg_likelihood,
+                'Average Entropy': avg_entropy,
+                'Classification': classification,
+                'Cluster Size': cluster_size
+            })
 
     # Create a DataFrame for plotting
     df = pd.DataFrame(entropy_likelihood_data)
@@ -46,15 +48,16 @@ def plot_entropy_clusters(entropy_clusters):
     # Prepare data for visualization
     cluster_data = []
     for entropy, passwords in entropy_clusters.items():
-        # Prepare sample passwords for the table
-        sample_passwords = passwords[:3]  # Get up to 3 sample passwords
-        cluster_data.append({
-            'Entropy': float(entropy),
-            'Cluster Size': len(passwords),
-            'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
-            'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
-            'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
-        })
+        # Filter: Only include clusters with entropy < 200 and size > 100
+        if float(entropy) < 200 and len(passwords) > 100:
+            sample_passwords = passwords[:3]  # Get up to 3 sample passwords
+            cluster_data.append({
+                'Entropy': float(entropy),
+                'Cluster Size': len(passwords),
+                'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
+                'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
+                'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
+            })
 
     # Create a DataFrame for Plotly
     df = pd.DataFrame(cluster_data)
@@ -64,24 +67,23 @@ def plot_entropy_clusters(entropy_clusters):
 
     # Create an interactive scatter plot colored by cluster size
     fig = px.scatter(df, x='Entropy', y='Cluster Size',
-                     title="Password Clusters by Entropy",
+                     title="Password Clusters by Entropy (Filtered)",
                      labels={'Entropy': 'Entropy Value', 'Cluster Size': 'Number of Passwords'},
                      size='Cluster Size', size_max=20,
                      color='Cluster Size',  # Color by cluster size
-                     color_continuous_scale=px.colors.sequential.Viridis)  # Optional color scale
+                     color_continuous_scale=px.colors.sequential.Viridis)
 
-    # Update the hover data to include entropy value, cluster size, and sample passwords
     fig.update_traces(
         hovertemplate=(
-            '<b>Entropy:</b> %{x:.2f}<br>'  # Display entropy value
-            '<b>Cluster Size:</b> %{y}<br>'  # Display number of passwords
-            '<b>Sample Passwords:</b><br>%{hovertext}'  # Display sample passwords
+            '<b>Entropy:</b> %{x:.2f}<br>'
+            '<b>Cluster Size:</b> %{y}<br>'
+            '<b>Sample Passwords:</b><br>%{hovertext}'
             '<extra></extra>'
         ),
         hovertext=df[['Sample Password 1', 'Sample Password 2', 'Sample Password 3']].apply(lambda x: '<br>'.join(x), axis=1)
     )
 
-    st.plotly_chart(fig)  # Display the Plotly chart
+    st.plotly_chart(fig)
 
     st.write("""
              The scatter plot above visualizes the clustering of passwords based on their entropy values. \n
@@ -97,9 +99,9 @@ def plot_entropy_clusters(entropy_clusters):
                 It can be seen that most passwords fall within the lower entropy range, indicating weaker password strength. \n
         """)
 
-    # Optional: Display the clusters and sample passwords in a table below the plot
     st.subheader('Entropy Clusters Table')
     st.dataframe(df[['Entropy', 'Cluster Size', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
+
 
 def plot_ngram_clusters(ngram_clusters):
     # Extract threshold
@@ -111,19 +113,24 @@ def plot_ngram_clusters(ngram_clusters):
         average_likelihood = cluster['Average Log Likelihood']
         classification = cluster['Classification']
         passwords = cluster['Passwords']
-        # Get up to 3 sample passwords
-        sample_passwords = [p['Password'] for p in passwords[:3]]
-        ngram_data_list.append({
-            'Log Likelihood': float(log_likelihood),
-            'Average Log Likelihood': average_likelihood,
-            'Classification': classification,
-            'Cluster Size': len(passwords),
-            'Sample Passwords': '<br>'.join(sample_passwords)  # Combine sample passwords for hover
-        })
+
+        # Filter: Only include clusters with log-likelihood > -500 and size > 100
+        if average_likelihood > -500 and len(passwords) > 100:
+            # Extract up to 3 sample passwords
+            sample_passwords = [p['Password'] for p in passwords[:3]]
+            ngram_data_list.append({
+                'Log Likelihood': float(log_likelihood),
+                'Average Log Likelihood': average_likelihood,
+                'Classification': classification,
+                'Cluster Size': len(passwords),
+                'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
+                'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
+                'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
+            })
 
     # Create a DataFrame for Plotly
     ngram_df = pd.DataFrame(ngram_data_list)
-    ngram_df = ngram_df.sort_values(by='Log Likelihood', ascending=False)  # Sort DataFrame by Log Likelihood
+    ngram_df = ngram_df.sort_values(by='Log Likelihood', ascending=False)
 
     # Create an interactive scatter plot for n-gram clusters
     ngram_fig = px.scatter(
@@ -147,7 +154,7 @@ def plot_ngram_clusters(ngram_clusters):
             '<b>Sample Passwords:</b><br>%{customdata[1]}<br>'
             '<extra></extra>'
         ),
-        customdata=ngram_df[['Classification', 'Sample Passwords']].values  # Add sample passwords to customdata
+        customdata=ngram_df[['Classification', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']].values  # Add sample passwords to customdata
     )
 
     # Add a vertical line for the threshold
@@ -162,24 +169,32 @@ def plot_ngram_clusters(ngram_clusters):
     # Display the Plotly chart
     st.plotly_chart(ngram_fig)
 
-    # Display the clusters in a table
+    # Display the clusters in a table with separate columns for the sample passwords
     st.subheader('N-gram Clusters Table')
-    st.dataframe(ngram_df[['Average Log Likelihood', 'Classification', 'Cluster Size', 'Sample Passwords']])
+    st.dataframe(ngram_df[['Average Log Likelihood', 'Classification', 'Cluster Size', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
 
 
 def plot_minhash_clusters(minhash_clusters):
     # Prepare data for MinHash clusters visualization
     minhash_cluster_data = []
     for cluster_label, passwords in minhash_clusters.items():
-        # Get up to 3 sample passwords for the table
-        sample_passwords = passwords[:3]
-        minhash_cluster_data.append({
-            'Cluster Label': cluster_label,
-            'Cluster Size': len(passwords),
-            'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
-            'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
-            'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
-        })
+        cluster_size = len(passwords)
+        # Filter clusters: only include clusters with a size smaller than 100K
+        if cluster_size < 100000:
+            # Get up to 3 sample passwords for the table
+            sample_passwords = passwords[:3]
+            minhash_cluster_data.append({
+                'Cluster Label': cluster_label,
+                'Cluster Size': cluster_size,
+                'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
+                'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
+                'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
+            })
+
+    # Check if there are any clusters to display
+    if len(minhash_cluster_data) == 0:
+        st.write("No clusters found with size smaller than 100K.")
+        return
 
     # Create a DataFrame for MinHash clusters
     minhash_df = pd.DataFrame(minhash_cluster_data)
@@ -187,7 +202,6 @@ def plot_minhash_clusters(minhash_clusters):
     # Display only the clusters and sample passwords in a table
     st.subheader('MinHash Clusters Table')
     st.dataframe(minhash_df[['Cluster Label', 'Cluster Size', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
-
 
 # New functions for loading and visualizing clusters with similarities
 def load_clusters_and_similarities(json_file):
@@ -235,17 +249,32 @@ def make_symmetric(matrix):
     return sym_matrix
 
 def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarity_matrix):
+    # Filter out clusters with size 100K or larger
+    filtered_cluster_names = []
+    filtered_cluster_sizes = []
+    filtered_cluster_examples = []
+    for name, size, examples in zip(cluster_names, cluster_sizes, cluster_examples):
+        if size < 100_000:  # Only include clusters smaller than 100K
+            filtered_cluster_names.append(name)
+            filtered_cluster_sizes.append(size)
+            filtered_cluster_examples.append(examples)
+
+    # Check if any clusters remain after filtering
+    if len(filtered_cluster_names) == 0:
+        st.warning("No clusters found with size smaller than 100K.")
+        return
+
     # Perform multidimensional scaling (MDS) to convert similarity matrix to 2D positions
     mds = MDS(n_components=2, dissimilarity='precomputed', random_state=42)
-    positions = mds.fit_transform(similarity_matrix)
+    positions = mds.fit_transform(similarity_matrix[:len(filtered_cluster_names), :len(filtered_cluster_names)])
 
     # Calculate marker sizes so that marker areas are proportional to cluster sizes
-    scaling_factor = 2  # Adjust this value to scale marker sizes for better visualization
-    marker_sizes = np.sqrt(cluster_sizes) * scaling_factor
+    scaling_factor = 0.5  # Adjust this value to scale marker sizes for better visualization
+    marker_sizes = np.sqrt(filtered_cluster_sizes) * scaling_factor
 
     # Create hover text including cluster name, size, and example passwords
     hover_text = []
-    for name, size, examples in zip(cluster_names, cluster_sizes, cluster_examples):
+    for name, size, examples in zip(filtered_cluster_names, filtered_cluster_sizes, filtered_cluster_examples):
         example_passwords = "<br>".join(examples)
         text = f"<b>{name}</b><br>Size: {size}<br><b>Examples:</b><br>{example_passwords}"
         hover_text.append(text)
@@ -260,7 +289,7 @@ def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarit
         mode='markers',
         marker=dict(
             size=marker_sizes,  # Marker sizes proportional to sqrt(cluster_sizes)
-            color=cluster_sizes,        # Color based on cluster sizes
+            color=filtered_cluster_sizes,  # Color based on filtered cluster sizes
             colorscale='Viridis',
             showscale=True,
             colorbar=dict(title="Cluster Size")
@@ -271,7 +300,7 @@ def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarit
 
     # Update layout for aesthetics
     fig.update_layout(
-        title="Visualization of Top Clusters by Size and Similarity",
+        title="Visualization of Top Clusters by Size and Similarity (Filtered for Clusters < 100K)",
         xaxis_title="MDS Dimension 1",
         yaxis_title="MDS Dimension 2",
         template="plotly_white",
@@ -281,6 +310,8 @@ def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarit
 
     # Show the interactive plot using Streamlit
     st.plotly_chart(fig, use_container_width=True)
+
+
 
 def static_clusters_page():
 

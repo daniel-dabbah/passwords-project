@@ -39,8 +39,11 @@ def log_likelihood_string(s, ngram_probs, charset, n=2):
     return log_likelihood_value
 
 # Function to calculate threshold
-def calculate_threshold(good_probs, bad_probs):
-    return (min(good_probs) + max(bad_probs)) / 2
+def calculate_threshold(good_probs, bad_probs, good_percentile=0, bad_percentile=95):
+    import numpy as np
+    good_threshold = np.percentile(good_probs, good_percentile)
+    bad_threshold = np.percentile(bad_probs, bad_percentile)
+    return (good_threshold + bad_threshold) / 2
 
 # Function to generate random gibberish passwords
 def generate_gibberish_dataset(num_passwords=100000, min_len=8, max_len=15, charset="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~!@#$%^&*()_+{}[]:\";'<>?,./\\|` "):
@@ -142,7 +145,7 @@ def cluster_passwords(meaningful_file_path, clustering_file_path, gibberish_coun
 # Example usage
 if __name__ == "__main__":
     meaningful_file_path = "rockyou2009_100K.txt"  # Path to the file containing meaningful passwords
-    clustering_file_path = "rockyou2024-100K.txt"  # Path to the file containing passwords to be classified
+    clustering_file_path = "rockyou2024-1M.txt"  # Path to the file containing passwords to be classified
     clustered_results, threshold = cluster_passwords(meaningful_file_path, clustering_file_path)
     
     print(f"Threshold for classification: {threshold:.4f}")

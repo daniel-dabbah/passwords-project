@@ -1,3 +1,4 @@
+import json
 import streamlit as st
 import pickle
 import plotly.express as px
@@ -8,8 +9,9 @@ import plotly.graph_objects as go
 
 
 def load_data(filename):
-    with open(filename, 'rb') as f:
-        return pickle.load(f)
+    """Load data from a JSON file."""
+    with open(filename, 'r') as f:
+        return json.load(f)
 
 def analyze_password(password):
     """Analyze the user's password and extract relevant information."""
@@ -92,7 +94,7 @@ def plot_password_length_distribution(loaded_statistics, password_length):
     st.write("Understand the distribution of password lengths.")
 
     length_percentages = loaded_statistics['length_percentages']
-    lengths = list(length_percentages.keys())
+    lengths = list(map(int, length_percentages.keys()))  # Ensure lengths are integers
     percentages = list(length_percentages.values())
 
     # Create a DataFrame from the lengths and percentages
@@ -103,7 +105,7 @@ def plot_password_length_distribution(loaded_statistics, password_length):
 
     # Highlight the user's password length in the plot
     if password_length is not None:
-        df_length['Color'] = df_length['Password Length'].apply(lambda x: 'red' if x == password_length else 'blue')
+        df_length['Color'] = ['red' if length == password_length else 'blue' for length in df_length['Password Length']]
     else:
         df_length['Color'] = 'blue'
 
@@ -117,6 +119,11 @@ def plot_password_length_distribution(loaded_statistics, password_length):
         color='Color',
         color_discrete_map={'red': 'red', 'blue': 'blue'},
         hover_data={'Percentage': ':.2f'}
+    )
+
+    # Update layout to improve visualization
+    fig_length.update_layout(
+        xaxis=dict(tickmode='linear', dtick=1)
     )
 
     st.plotly_chart(fig_length, use_container_width=True)
@@ -267,9 +274,12 @@ def plot_entropy_distribution(loaded_statistics, entropy_value):
 
     entropies = loaded_statistics['entropies']
 
-    # Create a DataFrame for entropies
+    # Filter the entropies to include only values between 0 and 200
+    filtered_entropies = [entropy for entropy in entropies if 0 <= entropy <= 180]
+
+    # Create a DataFrame for filtered entropies
     df_entropy = pd.DataFrame({
-        'Entropy': entropies
+        'Entropy': filtered_entropies
     })
 
     # Create an interactive histogram using Plotly
@@ -281,8 +291,8 @@ def plot_entropy_distribution(loaded_statistics, entropy_value):
         title='Entropy Distribution of Passwords'
     )
 
-    # Add vertical line and annotation for user's password entropy
-    if entropy_value is not None:
+    # Add vertical line and annotation for user's password entropy, if it's in the range of 0-200
+    if entropy_value is not None and 0 <= entropy_value <= 180:
         fig_entropy.add_vline(x=entropy_value, line_color='red', line_width=3)
         fig_entropy.add_annotation(
             x=entropy_value,
@@ -298,6 +308,7 @@ def plot_entropy_distribution(loaded_statistics, entropy_value):
         )
 
     st.plotly_chart(fig_entropy, use_container_width=True)
+
 
 def plot_number_position_violin(loaded_statistics, user_number_positions):
     """Plot the position of numbers in passwords."""
@@ -621,9 +632,9 @@ def dynamic_visualization_page():
     st.write("Explore various statistics of passwords in the dataset with interactive visualizations.")
 
     # Load the dataset
-    dataset_name = 'rockyou2024-100K.txt'  # Update with your dataset name
+    dataset_name = 'rockyou2024-1M.txt'  # Update with your dataset name
 
-    loaded_data = load_data(f'{dataset_name}_data_passwords_statistics.pkl')
+    loaded_data = load_data(f'{dataset_name}_data_passwords_statistics.json')
     loaded_statistics = loaded_data['statistics']
 
     # **Password Input**

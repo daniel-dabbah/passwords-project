@@ -587,7 +587,6 @@ def static_visualization_page():
     dataset_name = 'rockyou2024-1M.txt'  # Update with your dataset name
 
     loaded_data = load_data(f'{dataset_name}_data_passwords_statistics.json')
-    loaded_passwords = loaded_data.get('passwords', [])
     loaded_statistics = loaded_data.get('statistics', {})
 
     # Plotting functions

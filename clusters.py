@@ -1,11 +1,7 @@
-import string
-import numpy as np
-import matplotlib.pyplot as plt
 from collections import defaultdict
 from tqdm import tqdm
 import password_statistics as ps
 import json
-import Levenshtein as lev  # Import the Levenshtein library
 from datasketch import MinHash, MinHashLSH  # Import the MinHash and MinHashLSH classes
 import random
 
@@ -217,11 +213,11 @@ def cluster_strings_with_minhash_lsh(strings, threshold=0.9, num_perm=128, top_k
 
 if __name__ == "__main__":
 
-    dataset_name = 'rockyou2024-100K.txt'
+    dataset_name = 'rockyou2024-1M.txt'
     passwords, statistics = ps.analyze_passwords(dataset_name)
 
     """ Cluster strings by entropy and Find and show closest cluster"""
-    # cluster_strings_by_entropy = cluster_strings_by_entropy(passwords, entropy_threshold=0.5)
+    cluster_strings_by_entropy = cluster_strings_by_entropy(passwords, entropy_threshold=0.5)
     
 
     """ Cluster strings with MinHash """
