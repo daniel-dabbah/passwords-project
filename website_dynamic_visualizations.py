@@ -86,12 +86,13 @@ def display_password_analysis(password_info):
         st.write(f"- Numbers: {'Yes' if has_digit else 'No'}")
         st.write(f"- Special characters: {'Yes' if has_special else 'No'}")
     else:
-        st.write("Enter a password above to receive analysis.")
+        pass
+        # st.write("Enter a password above to receive analysis.")
 
 def plot_password_length_distribution(loaded_statistics, password_length):
     """Plot the password length distribution and highlight the user's password length."""
     st.header('Password Length Distribution')
-    st.write("Understand the distribution of password lengths.")
+    st.write("Here we show the distribution of different password lengths. The graph displays the percentage of passwords for each length. It also compares to the length of the password you entered.")
 
     length_percentages = loaded_statistics['length_percentages']
     lengths = list(map(int, length_percentages.keys()))  # Ensure lengths are integers
@@ -105,11 +106,11 @@ def plot_password_length_distribution(loaded_statistics, password_length):
 
     # Highlight the user's password length in the plot
     if password_length is not None:
-        df_length['Color'] = ['red' if length == password_length else 'blue' for length in df_length['Password Length']]
+        df_length['Color'] = ['Your Password Length' if length == password_length else 'Other Lengths' for length in df_length['Password Length']]
     else:
-        df_length['Color'] = 'blue'
+        df_length['Color'] = 'Other Lengths'
 
-    # Create an interactive bar chart using Plotly
+    # Create an interactive bar chart using Plotly with more eye-pleasant colors
     fig_length = px.bar(
         df_length,
         x='Password Length',
@@ -117,21 +118,22 @@ def plot_password_length_distribution(loaded_statistics, password_length):
         labels={'Password Length': 'Password Length', 'Percentage': 'Percentage'},
         title='Password Length Distribution',
         color='Color',
-        color_discrete_map={'red': 'red', 'blue': 'blue'},
+        color_discrete_map={'Your Password Length': '#FA8072', 'Other Lengths': '#4682B4'},
         hover_data={'Percentage': ':.2f'}
     )
 
     # Update layout to improve visualization
     fig_length.update_layout(
-        xaxis=dict(tickmode='linear', dtick=1)
+        xaxis=dict(tickmode='linear', dtick=1),
+        paper_bgcolor='white'
     )
 
     st.plotly_chart(fig_length, use_container_width=True)
 
 def plot_ascii_character_usage(loaded_statistics, user_chars):
     """Plot ASCII character usage and highlight user's characters."""
-    st.header('ASCII Character Usage')
-    st.write("Discover which ASCII characters are most commonly used in passwords.")
+    st.header('ASCII character usage in passwords')
+    st.write("This graph shows the distribution of each ASCII character in the dataset. We can see which characters appear in the password you entered.")
 
     ascii_counts = loaded_statistics['ascii_counts']
 
@@ -150,12 +152,12 @@ def plot_ascii_character_usage(loaded_statistics, user_chars):
 
     # Highlight the user's password characters in the plot
     if user_chars:
-        df_ascii['Color'] = df_ascii['ASCII Character'].apply(lambda x: 'red' if x in user_chars else 'blue')
+        df_ascii['Color'] = df_ascii['ASCII Character'].apply(lambda x: 'Characters in your password' if x in user_chars else 'Other Characters')
         st.write(f"Characters in your password: {' '.join(sorted(user_chars))}")
     else:
-        df_ascii['Color'] = 'blue'
+        df_ascii['Color'] = 'Other Characters'
 
-    # Create an interactive bar chart using Plotly
+    # Create an interactive bar chart using Plotly with more eye-pleasant colors
     fig_ascii = px.bar(
         df_ascii,
         x='ASCII Character',
@@ -163,14 +165,15 @@ def plot_ascii_character_usage(loaded_statistics, user_chars):
         labels={'ASCII Character': 'ASCII Character', 'Percentage': 'Percentage'},
         title='ASCII Character Usage in Passwords',
         color='Color',
-        color_discrete_map={'red': 'red', 'blue': 'blue'},
+        color_discrete_map={'Characters in your password': '#FA8072', 'Other Characters': '#4682B4'},
         category_orders={'ASCII Character': ascii_order}
     )
 
     # Update layout for better visualization
     fig_ascii.update_layout(
         xaxis_tickangle=-90,
-        xaxis=dict(dtick=1)
+        xaxis=dict(dtick=1),
+        paper_bgcolor='white'
     )
 
     st.plotly_chart(fig_ascii, use_container_width=True)
@@ -269,8 +272,12 @@ def plot_year_usage_histogram(loaded_statistics, user_years):
 
 def plot_entropy_distribution(loaded_statistics, entropy_value):
     """Plot entropy distribution and indicate user's password entropy."""
-    st.header('Entropy Distribution')
-    st.write("Entropy measures the unpredictability of passwords. Higher entropy indicates stronger passwords.")
+    st.header('How Strong is Your Password?')
+    st.write("Let's see how your password stacks up against others in terms of strength!\n\n"
+             "We use a measure called 'entropy' to gauge password strength. Think of it like a strength meter - "
+             "the higher the entropy, the stronger and more unpredictable your password is.\n\n"
+             "The graph below shows how your password compares to others in our database."
+             "Can you spot where your password falls on the strength spectrum?")
 
     entropies = loaded_statistics['entropies']
 
@@ -533,7 +540,8 @@ def plot_password_categories_distribution(loaded_statistics, user_password, spec
         special_chars (str): String containing special characters.
     """
     st.header('Password Categories Distribution')
-    st.write("Visualize the distribution of different password characteristics using a treemap.")
+    st.write("This treemap visualization shows the distribution of different password categories based on their character composition.")
+    st.write("Your password's category will be highlighted in red, allowing you to see which group it belongs to and what percentage of passwords fall into this category.")
     
     # Define the categories and their corresponding percentages
     categories = {
@@ -628,17 +636,26 @@ def display_password_strength_feedback(entropy_value):
         st.write("Enter a password above to receive feedback on its strength.")
 
 def dynamic_visualization_page():
-    st.title('Interactive Password Statistics Dashboard')
-    st.write("Explore various statistics of passwords in the dataset with interactive visualizations.")
-
-    # Load the dataset
+   # Load the dataset
     dataset_name = 'rockyou2024-1M.txt'  # Update with your dataset name
 
     loaded_data = load_data(f'{dataset_name}_data_passwords_statistics.json')
     loaded_statistics = loaded_data['statistics']
+    
+    st.write("""
+    Welcome to our Password Analysis Tool!\n
+    Here, you can enter a password to see how it compares to 1 million other passwords from the RockYou dataset.
+    We'll provide you with insights on how to improve your password's strength and uniqueness.
+    You'll also receive an entropy score, which measures the randomness and unpredictability of your password.\n
+    Don't worry - we won't store your password. All analysis is done locally.\n
+    After analysis, you'll see a graph showing how your password's entropy compares to others.
+    Use these insights to create a stronger, more secure password that's less likely to be guessed or hacked.
+    """)
+
+    
 
     # **Password Input**
-    password = st.text_input("Enter a password for analysis",
+    password = st.text_input("Enter a password for analysis", type="password",
                              help="Type your password here to see how it compares to common length patterns")
     st.caption("Your password will be analyzed locally and not stored or transmitted.")
 

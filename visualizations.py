@@ -480,6 +480,7 @@ if __name__ == '__main__':
     #TODO: change to rockyuoi 2024-100K.txt
     dataset_name = 'rockyou_mini.txt'
     dataset_name = 'rockyou2024-100K.txt'
+    dataset_name = 'rockyou2024-1M.txt'
     passwords, statistics = ps.analyze_passwords(dataset_name)
 
     
