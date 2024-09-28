@@ -627,7 +627,9 @@ def dynamic_visualization_page():
     loaded_statistics = loaded_data['statistics']
 
     # **Password Input**
-    password = st.text_input("Enter your password for analysis", type="password", key='user_password')
+    password = st.text_input("Enter a password for analysis",
+                             help="Type your password here to see how it compares to common length patterns")
+    st.caption("Your password will be analyzed locally and not stored or transmitted.")
 
     # **Password Analysis**
     password_info = analyze_password(password)

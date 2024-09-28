@@ -316,7 +316,7 @@ def plot_average_numbers_by_length(loaded_statistics, character_type):
         percentages_data = loaded_statistics.get('count_of_special_characters_per_length_per_count_percentages', {})
         title = 'Average Number of Special Characters by Password Length'
         y_label = 'Average Number of Special Characters'
-        color_scale = 'Magma'
+        color_scale = 'Purples'
     else:
         st.write(f"No data available for character type '{character_type}'.")
         return
@@ -452,7 +452,7 @@ def plot_distribution_for_length(loaded_statistics, length, character_type):
         percentages_data = loaded_statistics.get('count_of_special_characters_per_length_per_count_percentages', {})
         title = f'Distribution of Special Character Counts for Passwords of Length {length}'
         x_label = 'Number of Special Characters'
-        color = 'Magma'
+        color = 'Purples'
     else:
         st.write(f"No data available for character type '{character_type}'.")
         return

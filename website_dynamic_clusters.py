@@ -513,7 +513,9 @@ def dynamic_clusters_page():
     # Page for inserting a password
     st.header('Insert Password for Clustering Analysis')
     st.write("Please enter your password below.")
-    password = st.text_input("Password", type="password")
+    password = st.text_input("Enter a password for analysis",
+                             help="Type your password here to see how it compares to common length patterns")
+    st.caption("Your password will be analyzed locally and not stored or transmitted.")
 
     if not password:
         st.write("Enter a password to analyze.")
