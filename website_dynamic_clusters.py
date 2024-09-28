@@ -289,13 +289,12 @@ def plot_entropy(password, entropy_clusters):
     entropy_cluster_data = []
     for entropy, passwords in entropy_clusters.items():
         is_user_cluster = (float(entropy) == nearest_entropy_cluster)
-        # Get up to 3 sample passwords
         sample_passwords = passwords[:3] if len(passwords) > 0 else ['No Passwords']
         entropy_cluster_data.append({
             'Entropy': float(entropy),
             'Cluster Size': len(passwords),
-            'User Cluster': is_user_cluster,  # Mark the user's cluster
-            'Sample Passwords': '<br>'.join(sample_passwords)  # Combine sample passwords with line breaks for hover
+            'User Cluster': is_user_cluster,
+            'Sample Passwords': '<br>'.join(sample_passwords)
         })
 
     # Create a DataFrame for Entropy Clusters
@@ -311,59 +310,63 @@ def plot_entropy(password, entropy_clusters):
         labels={'Entropy': 'Entropy Value', 'Cluster Size': 'Number of Passwords'},
         size='Cluster Size',
         size_max=20,
-        color='User Cluster',  # Color user's cluster differently
-        color_discrete_map={True: 'red', False: 'blue'}  # User's cluster is red, others are blue
+        color='User Cluster',
+        color_discrete_map={True: 'red', False: 'blue'}
     )
 
-    # Update the hover data to include entropy value, cluster size, and sample passwords
+    # Update hover template
     fig_entropy.update_traces(
-        hovertemplate=(
-            '<b>Entropy:</b> %{x:.2f}<br>'  # Display entropy value
-            '<b>Cluster Size:</b> %{y}<br>'  # Display number of passwords
-            '<b>Sample Passwords:</b><br>%{customdata[0]}<br>'  # Display sample passwords
-            '<extra></extra>'
-        ),
+        hovertemplate=('<b>Entropy:</b> %{x:.2f}<br>'
+                       '<b>Cluster Size:</b> %{y}<br>'
+                       '<b>Sample Passwords:</b><br>%{customdata[0]}<br>'
+                       '<extra></extra>'),
         customdata=df_entropy[['Sample Passwords']].values
     )
 
-    # Show the Entropy Cluster plot
+    # Show the entropy cluster plot
     st.plotly_chart(fig_entropy, use_container_width=True)
 
-    # Display the entropy of the input password and the assigned cluster
-    st.write(f"Your password's entropy: {password_entropy:.2f}")
+    # Display the entropy of the input password
+    st.subheader(f"Your password's entropy: **{password_entropy:.2f}**")
     st.write(f"Assigned to entropy cluster: {nearest_entropy_cluster:.2f}")
 
-    # Display the top 10 closest passwords by entropy
+    # Display the top 10 closest passwords with their entropy values
     st.subheader("Top 10 Closest Passwords by Entropy")
     if closest_passwords:
         for i, p in enumerate(closest_passwords, 1):
-            st.write(f"{i}. {p}")
+            if p == password:
+                st.markdown(f"**{i}. {p} (Entropy: {calculate_entropy(p):.2f})** - **Your password**")
+            else:
+                st.write(f"{i}. {p} (Entropy: {calculate_entropy(p):.2f})")
     else:
         st.write("No similar passwords found in the nearest entropy cluster.")
 
+
 def plot_minhash(password, minhash_clusters):
-    # Find the closest MinHash cluster and get the 10 closest passwords
     closest_passwords_minhash, max_similarity_minhash = find_and_show_closest_minhash_cluster(
         password, minhash_clusters
     )
 
-    # Display the MinHash similarity and the closest passwords
-    st.write(f"Max MinHash similarity: {max_similarity_minhash:.2f}")
-    
+    # Display MinHash similarity for the user's password
+    st.subheader(f"Max MinHash similarity: **{max_similarity_minhash:.2f}**")
+
+    # Display the top 10 closest passwords by MinHash similarity
     st.subheader("Top 10 Closest Passwords by MinHash Similarity")
     if closest_passwords_minhash:
         for i, p in enumerate(closest_passwords_minhash, 1):
-            st.write(f"{i}. {p}")
+            minhash_sim = get_minhash(password).jaccard(get_minhash(p))
+            if p == password:
+                st.markdown(f"**{i}. {p} (MinHash Similarity: {minhash_sim:.2f})** - **Your password**")
+            else:
+                st.write(f"{i}. {p} (MinHash Similarity: {minhash_sim:.2f})")
     else:
         st.write("No similar passwords found in the nearest MinHash cluster.")
 
+
 def plot_ngram(password, ngram_clusters_json, ngram_probs):
-    # Get threshold from the JSON data
     threshold = ngram_clusters_json.get('Threshold', None)
     ngram_clusters = ngram_clusters_json.get('Clusters', {})
-
-    # Define n for n-grams
-    n = 2  # Adjust if necessary
+    n = 2  # Define n for n-grams
 
     # Calculate n-gram log-likelihood and find the nearest n-gram cluster
     password_ngram_ll = calculate_ngram_log_likelihood(password, ngram_probs, n, smoothing=1e-10)
@@ -372,28 +375,32 @@ def plot_ngram(password, ngram_clusters_json, ngram_probs):
         password, ngram_clusters, ngram_probs, top_n=10, n=2, smoothing=1e-10
     )
 
-    # Prepare data for n-gram visualization
+    # Prepare data for visualization
     ngram_df = create_ngram_cluster_dataframe(ngram_clusters, nearest_ngram_cluster_key, ngram_probs, n=2)
 
-    # Check if the DataFrame is not empty before plotting
+    # Visualize n-gram clusters if data is available
     if not ngram_df.empty:
-        # Visualize n-gram clusters, including the threshold
         ngram_fig = visualize_ngram_clusters(ngram_df, threshold)
         st.plotly_chart(ngram_fig, use_container_width=True)
     else:
         st.warning("No n-gram clusters available for visualization.")
 
-    # Display the n-gram log-likelihood of the input password and the assigned cluster
-    st.write(f"Your password's n-gram log-likelihood: {password_ngram_ll:.2f}")
-    st.write(f"Assigned to n-gram cluster with Average Log Likelihood: {float(closest_ngram_ll):.2f}")
+    # Display the log-likelihood of the input password
+    st.subheader(f"Your password's n-gram log-likelihood: **{password_ngram_ll:.2f}**")
+    st.write(f"Assigned to n-gram cluster with Average Log Likelihood: {closest_ngram_ll:.2f}")
 
     # Display the top 10 closest passwords by n-gram log-likelihood
     st.subheader("Top 10 Closest Passwords by N-gram Log-Likelihood")
     if closest_ngram_passwords:
         for i, p in enumerate(closest_ngram_passwords, 1):
-            st.write(f"{i}. {p}")
+            ngram_ll = calculate_ngram_log_likelihood(p, ngram_probs, n, smoothing=1e-10)
+            if p == password:
+                st.markdown(f"**{i}. {p} (Log-Likelihood: {ngram_ll:.2f})** - **Your password**")
+            else:
+                st.write(f"{i}. {p} (Log-Likelihood: {ngram_ll:.2f})")
     else:
         st.write("No similar passwords found in the nearest n-gram cluster.")
+
 
 # New functions for loading and visualizing clusters with similarities
 def load_clusters_and_similarities(json_file):
@@ -510,8 +517,15 @@ def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarit
     st.plotly_chart(fig, use_container_width=True)
 
 def dynamic_clusters_page():
+    st.header('Password Clustering Analysis')
+    st.write("""
+    In this analysis, we use three different techniques—entropy, n-gram log-likelihood, and MinHash—to cluster passwords based on their statistical properties.
+    Each method captures a different aspect of password structure, allowing us to better understand password strength and predictability.
+    By inputting your password, you will be able to compare it to known password clusters and find its closest matches based on each of these clustering techniques.
+    """)
+
     # Page for inserting a password
-    st.header('Insert Password for Clustering Analysis')
+    st.subheader('Insert Password for Clustering Analysis')
     st.write("Please enter your password below.")
     password = st.text_input("Enter a password for analysis",
                              help="Type your password here to see how it compares to common length patterns")
@@ -526,7 +540,7 @@ def dynamic_clusters_page():
     minhash_json_name = 'minhash_clusters.json'
     ngram_prob_name = 'ngram_probs.json'
     ngram_clusters_name = 'ngram_clusters.json'
-    minhash_similarity_json_name = 'minhash_clusters_with_similarity.json' 
+    minhash_similarity_json_name = 'minhash_clusters_with_similarity.json'
 
     entropy_json_path = os.path.join(json_files_path, entropy_json_name)
     ngram_clusters_path = os.path.join(json_files_path, ngram_clusters_name)
@@ -545,18 +559,71 @@ def dynamic_clusters_page():
         ngram_clusters_json = json.load(json_file)
 
     """ Entropy Clustering """
+    st.subheader('Clustering by Entropy')
+    st.write("""
+    **Entropy** is a critical metric for assessing password strength. It measures the unpredictability or randomness in a password, which directly correlates with how difficult it is to guess. Entropy is calculated based on two key factors:
+
+    1. **Password Length**: Longer passwords have higher entropy because they offer more potential combinations of characters.
+    2. **Character Set Size**: The diversity of characters (e.g., lowercase, uppercase, numbers, special symbols) in the password increases the character set size, further boosting entropy.
+
+    The formula to calculate entropy is: 
+
+    `Entropy = Password Length × log₂(Character Set Size)`
+
+    For example, a password that includes lowercase letters (26 characters), uppercase letters (26 characters), and numbers (10 characters), and has a length of 8 characters, will have a character set size of 62. Using the formula, its entropy is:
+
+    `8 × log₂(62) ≈ 47.63 bits`
+
+    The higher the entropy, the stronger the password. To ensure robust security, it is recommended that a password achieve at least 80 bits of entropy, typically requiring a length of at least 12 characters that incorporate a mix of all character types.
+
+    ### How does the entropy clustering work?
+    We calculate the entropy for each password in the dataset and cluster together passwords with similar entropy values. When you input your password, we compute its entropy and display its closest cluster in the scatter plot. This helps you visualize where your password stands in terms of security compared to other passwords in the dataset. 
+
+    You will also see the top 10 closest passwords to yours based on entropy, along with their entropy values, providing a clear comparison of how secure your password is.
+    """)
+
     plot_entropy(password, entropy_clusters)
 
     """ N-gram Clustering """
+    st.subheader('Clustering by N-gram Log-Likelihood')
+    st.write("""
+    **N-gram Log-Likelihood** is a statistical measure used to evaluate the probability of a sequence of characters (in this case, a password) based on patterns observed in large datasets. N-grams refer to contiguous sequences of 'n' characters. For example, a bi-gram analyzes two consecutive characters at a time. 
+
+    The **log-likelihood** value tells us how likely a given sequence is to occur based on common linguistic patterns. Passwords with high log-likelihood values are considered **"meaningful"**, meaning they follow more predictable patterns and resemble natural language, making them easier to guess. On the other hand, passwords with low log-likelihood values are considered **"gibberish"** because they appear more random and less predictable.
+
+    ### Why does this matter?
+    While a password with high entropy might seem secure because it uses diverse characters, the presence of common words or patterns can increase the n-gram log-likelihood. This makes it more vulnerable to attacks that rely on language models or dictionaries. For example, "WelcomeBack2022!" might have high entropy, but it contains common words and a predictable number sequence, resulting in a higher log-likelihood and making it more predictable.
+
+    ### Meaningful vs. Gibberish
+    When clustering passwords, we differentiate between **meaningful** and **gibberish** sequences based on their average n-gram log-likelihood. 
+    - **Meaningful** passwords tend to follow linguistic or common patterns, making them more vulnerable to attacks based on language models.
+    - **Gibberish** passwords appear more random and are less predictable, which enhances their security.
+
+    Your password’s n-gram log-likelihood score will determine which cluster it belongs to—**meaningful** or **gibberish**—providing you with insights into how predictable or random your password structure is.
+    """)
     # Load n-gram probabilities
     ngram_probs = load_ngram_probabilities(ngram_prob_path)
     plot_ngram(password, ngram_clusters_json, ngram_probs)
 
     """ MinHash Clustering """
-    st.subheader("MinHash Clusters Visualization")
+    st.subheader('Clustering by MinHash Similarity')
+    st.write("""
+    **MinHash** is a technique used to estimate the similarity between sets, which in this context refers to passwords as sets of characters. By treating each password as a set of unique characters and hashing these characters into a compact signature (MinHash signature), we can efficiently compare passwords based on their structural similarities.
 
-    # Let the user select the number of top clusters to display
-    top_k = st.slider('Select number of top clusters to display', min_value=5, max_value=50, value=10, step=5)
+    The **Jaccard similarity** between two sets (passwords) is calculated by measuring how many characters they share. MinHash approximates this similarity efficiently, which is especially useful when comparing a large number of passwords. This allows us to identify structurally similar passwords, even if their character sequences or lengths differ.
+
+    ### Why does MinHash matter for passwords?
+    MinHash helps uncover passwords that may not be identical but are structurally similar. For example, passwords like "Password123" and "Password456" might have different digits at the end, but their character sets overlap significantly. MinHash captures this similarity and clusters these passwords together.
+
+    ### Visualization and Clustering
+    You can adjust the number of MinHash clusters displayed using a slider, ranging from 10 to 100. The scatter plot visualizes these clusters, with each point representing one of the **largest** password clusters. The distances between clusters reflect how different or similar they are based on character composition, and the size of the points corresponds to the number of passwords in each cluster.
+
+    By analyzing the largest 100 clusters, you can get a sense of how passwords are grouped based on their structural similarities. The visualization also shows the **top N** closest passwords to yours, where **N** is the number of clusters you've chosen to display. This allows you to understand how your password compares to others in terms of character overlap and structure.
+    """)
+
+    
+    st.subheader("MinHash Clusters Visualization")
+    top_k = st.slider('Select number of top clusters to display', min_value=5, max_value=100, value=10, step=5)
 
     # Load clusters and similarities
     if os.path.exists(minhash_similarity_json_path):
@@ -566,46 +633,41 @@ def dynamic_clusters_page():
         closest_cluster_label, max_similarity = find_closest_minhash_cluster_label(password, clusters)
 
         if max_similarity == 0:
-            # No similar cluster found, create a new cluster for the user's password
+            st.write("No similar cluster found. Creating a new cluster for your password.")
+
             user_cluster_label = 'User Password'
             clusters[user_cluster_label] = [password]
 
-            # Get top clusters without including any specific clusters
             cluster_names, cluster_sizes, cluster_examples, similarity_matrix = get_top_k_clusters(
                 clusters, similarities, top_k=top_k)
 
-            # Add the user's cluster to the data
             cluster_names.append(user_cluster_label)
             cluster_sizes = np.append(cluster_sizes, 1)
             cluster_examples.append([password])
 
-            # Compute similarities between user's password and existing clusters
             user_similarities = []
             input_minhash = get_minhash(password)
-            for cluster_label in cluster_names[:-1]:  # Exclude the user's cluster itself
+            for cluster_label in cluster_names[:-1]:
                 cluster_minhash = get_minhash(clusters[cluster_label][0])
                 sim = input_minhash.jaccard(cluster_minhash)
-                user_similarities.append(1 - sim)  # Distance
+                user_similarities.append(1 - sim)
 
-            # Now, update the similarity_matrix to include the new cluster
-            new_row = np.array(user_similarities + [0])  # Similarity with self is 0
+            new_row = np.array(user_similarities + [0])
             similarity_matrix = np.vstack([similarity_matrix, new_row[:-1]])
             new_col = np.append(new_row, 0)[:, np.newaxis]
             similarity_matrix = np.hstack([similarity_matrix, new_col])
 
-            # Update the closest cluster label to 'User Password' to color it differently
             closest_cluster_label = user_cluster_label
         else:
-            # Ensure the closest cluster is included
             cluster_names, cluster_sizes, cluster_examples, similarity_matrix = get_top_k_clusters(
                 clusters, similarities, top_k=top_k, include_clusters=[closest_cluster_label])
 
-        # Now, proceed to visualize
         visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarity_matrix, closest_cluster_label)
     else:
         st.warning("MinHash clusters with similarities file not found.")
 
     plot_minhash(password, minhash_clusters)
+
 
 # Call the main function to display the page
 if __name__ == "__main__":

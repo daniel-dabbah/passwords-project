@@ -180,7 +180,7 @@ def plot_minhash_clusters(minhash_clusters):
     for cluster_label, passwords in minhash_clusters.items():
         cluster_size = len(passwords)
         # Filter clusters: only include clusters with a size smaller than 100K
-        if cluster_size < 100000:
+        if cluster_size < 100000 and cluster_size >= 10:
             # Get up to 3 sample passwords for the table
             sample_passwords = passwords[:3]
             minhash_cluster_data.append({
@@ -193,7 +193,7 @@ def plot_minhash_clusters(minhash_clusters):
 
     # Check if there are any clusters to display
     if len(minhash_cluster_data) == 0:
-        st.write("No clusters found with size smaller than 100K.")
+        st.write("No clusters found.")
         return
 
     # Create a DataFrame for MinHash clusters
@@ -300,7 +300,7 @@ def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarit
 
     # Update layout for aesthetics
     fig.update_layout(
-        title="Visualization of Top Clusters by Size and Similarity (Filtered for Clusters < 100K)",
+        title="Visualization of Top Clusters by Size and Similarity",
         xaxis_title="MDS Dimension 1",
         yaxis_title="MDS Dimension 2",
         template="plotly_white",
@@ -319,7 +319,7 @@ def static_clusters_page():
     entropy_json_name = 'entropy_clusters.json'
     ngram_json_name = 'ngram_clusters.json'
     minhash_json_name = 'minhash_clusters.json'
-    minhash_similarity_json_name = 'minhash_clusters_with_similarity.json'  # Added for similarity visualization
+    minhash_similarity_json_name = 'minhash_clusters_with_similarity.json'
 
     entropy_json_path = os.path.join(json_files_path, entropy_json_name)
     ngram_json_path = os.path.join(json_files_path, ngram_json_name)
@@ -328,83 +328,77 @@ def static_clusters_page():
 
     # Load the entropy dictionary from the JSON file
     with open(entropy_json_path, 'r', encoding='utf-8') as json_file:
-        entropy_clusters = json.load(json_file) 
+        entropy_clusters = json.load(json_file)
 
     # Load the n-gram clustering data from the JSON file
     with open(ngram_json_path, 'r', encoding='utf-8') as json_file:
-        ngram_clusters = json.load(json_file)  
+        ngram_clusters = json.load(json_file)
 
     # Load the MinHash clusters from the JSON file
     with open(minhash_json_path, 'r', encoding='utf-8') as json_file:
-        minhash_clusters = json.load(json_file)  
+        minhash_clusters = json.load(json_file)
 
     st.header('Clustering Analysis')
-    st.write("Clustering is a type of unsupervised learning that groups data points into clusters based on their similarities.")
+    st.write("""
+        This page provides an overview of password clustering methods based on three key metrics: **Entropy**, **N-gram Log-Likelihood**, and **MinHash Similarity**.
+        These clustering methods allow us to group passwords that exhibit similar characteristics, offering insights into password strength, predictability, and similarity.
+        Passwords are grouped into clusters based on these metrics, and the visualizations here show how passwords are distributed across these clusters.
+    """)
 
     """ Entropy Clustering """
     st.header('Clustering by Entropy')
     st.write("""
-             Entropy represents the measure of unpredictability or randomness in a password. \n
-             It reflects how resistant a password is to being guessed or cracked. \n
-             The more diverse the character set used—including lowercase letters, uppercase letters, numbers, and special symbols,\n
-             the higher the entropy, making the password significantly more secure.
-             The entropy is calculated using the formula: entropy = log2(possible combinations). \n
-
-             To ensure robust security, it is recommended that a password achieve at least 80 bits of entropy,\n
-             typically requiring a length of at least 12 characters that utilize a blend of all character types. \n
-        """)
+        **Entropy** is a measure of unpredictability or randomness in a password. A password with higher entropy is harder to guess because it incorporates a larger variety of characters or a longer sequence of characters.
+        - **Formula for Entropy**: Entropy = Password Length × log₂(Character Set Size)
+        - **Character Set Size**: This refers to the number of possible characters used in a password, including lowercase letters, uppercase letters, numbers, and symbols.
+        
+        For example, an 8-character password with lowercase, uppercase, and numbers (a total of 62 possible characters) has an entropy of approximately 47.63 bits.
+        Passwords with entropy values above 80 bits are considered secure, typically requiring a mix of all character types and a minimum length of 12 characters.
+        
+        In this clustering analysis, we group passwords based on their entropy values. Passwords with a small difference in entropy are clustered together, helping visualize where passwords stand in terms of complexity compared to others.
+    """)
     plot_entropy_clusters(entropy_clusters)
-    
 
     """ N-Gram Clustering """
     st.header('Clustering by N-gram Log-Likelihood')
     st.write("""
-              N-gram Model: We break down passwords into sequences of 2 characters (bi-grams) to capture common patterns in character combinations.\n
-              Log-likelihood Calculation: Each password is evaluated against the n-gram model, calculating its likelihood based on how closely it matches common patterns from a meaningful password dataset.\n
-              Clustering: Passwords with similar log-likelihoods are grouped together into clusters, where each cluster represents passwords that have similar structural patterns. \n
-              Classification: Clusters are classified as either 'Meaningful' or 'Gibberish' based on their average log-likelihood values. \n
-              Threshold: A threshold is set to distinguish between 'Meaningful' and 'Gibberish' clusters. \n
-              The scatter plot below visualizes the clustering of passwords based on their n-gram log-likelihood values. \n
-              Each point represents a cluster of passwords with a specific log-likelihood value. \n
-              The size of the point corresponds to the number of passwords in the cluster. \n
-              Hover over the points to view the average log-likelihood, classification, cluster size, and sample passwords. \n
-              The red dashed line represents the threshold used to classify clusters as 'Meaningful' or 'Gibberish'. \n
-              The table below provides a detailed view of the clusters, including the average log-likelihood, classification, cluster size, and sample passwords. \n
-              The clusters in the table are sorted by log-likelihood in descending order. \n
-              You can explore the distribution of n-gram log-likelihood values and the corresponding cluster sizes. \n
-             """)
+        **N-gram Log-Likelihood** evaluates the probability of a sequence of characters based on patterns learned from a large dataset of common passwords.
+        - **N-grams** refer to contiguous sequences of characters, and in this analysis, we focus on bi-grams (sequences of 2 characters).
+        - **Log-Likelihood** is the logarithmic probability of these character sequences occurring based on observed patterns from common passwords.
+        
+        Passwords with high log-likelihood values are considered **meaningful**, as they follow common patterns and are more predictable. Conversely, passwords with low log-likelihood values are classified as **gibberish**, as they are more random and harder to predict.
+
+        - **Meaningful passwords** are those that exhibit common patterns and linguistic structures, making them vulnerable to attacks that exploit dictionaries or language models.
+        - **Gibberish passwords** appear more random and unpredictable, providing stronger protection against such attacks.
+        
+        In this clustering method, we calculate the n-gram log-likelihood of each password and group them into clusters. A **threshold** is used to distinguish between meaningful and gibberish clusters, and the visualization shows the distribution of passwords based on this metric.
+    """)
     plot_ngram_clusters(ngram_clusters)
-    
 
     """ MinHash Clustering """
     st.header('Clustering by MinHash')
     st.write("""
-            MinHash is a technique used to efficiently estimate the similarity between sets. 
-            For passwords, it allows us to compare them based on the similarity of their character sets.\n
-            Hashing Passwords: Each password is hashed into a compact MinHash signature, capturing the essential information of its character set. \n
-            Similarity Calculation: Passwords with similar MinHash signatures are grouped into clusters. 
-            These clusters represent groups of passwords with overlapping character sets, making them structurally similar.\n
-            The scatter plot below visualizes the clustering of passwords based on their MinHash signatures. \n
-            Each point represents a cluster of passwords with a specific label. \n
-            The size of the point corresponds to the number of passwords in the cluster. \n
-            Hover over the points to view the cluster label, cluster size, and sample passwords. \n
-            The table below provides a detailed view of the clusters, including the cluster label, cluster size, and sample passwords. \n
-            You can explore the distribution of MinHash clusters and the corresponding cluster sizes. \n
-             """)
+        **MinHash** is a method used to estimate the similarity between sets of characters in passwords. By hashing the character sets of passwords, we can efficiently compare the similarity of passwords and group them into clusters based on shared characters.
+        - Each password is hashed into a compact **MinHash signature**, representing its character set.
+        - **Similarity** between passwords is calculated based on the overlap of their character sets.
 
+        Passwords with similar MinHash signatures are grouped together, even if their sequences or lengths differ. This clustering technique helps identify passwords that are structurally similar based on the characters they use, rather than their exact sequence.
+        
+        The scatter plot visualizes these clusters, and the closer the points, the more similar the passwords are. This method is particularly effective for large datasets, as it provides a fast and scalable way to estimate password similarity.
+    """)
+    plot_minhash_clusters(minhash_clusters)
 
     """ MinHash Clusters Visualization with Similarity """
     st.subheader('MinHash Clusters Visualization with Similarity')
     st.write("""
-            This visualization shows the top clusters based on MinHash similarity.
-            Clusters are positioned based on their similarities; closer clusters are more similar.
-            The size and color of each point correspond to the cluster size.
-            """)
-
+        In addition to clustering passwords based on their MinHash signatures, we also visualize the **similarity** between clusters. Clusters that are positioned closer together share more similarities, and the size and color of each cluster reflect its size.
+        
+        This visualization allows us to interpret the relationships between password clusters and helps us see how common or unique different groups of passwords are.
+    """)
+    
     # Let the user select the number of top clusters to display
     top_k = st.slider('Select number of top clusters to display', min_value=5, max_value=100, value=10, step=5)
 
-    # Load clusters and similarities
     if os.path.exists(minhash_similarity_json_path):
         clusters, similarities = load_clusters_and_similarities(minhash_similarity_json_path)
 
@@ -414,18 +408,17 @@ def static_clusters_page():
         visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarity_matrix)
     else:
         st.warning("MinHash clusters with similarities file not found.")
-    plot_minhash_clusters(minhash_clusters)
 
     """ Entropy vs Log-Likelihood Correlation """
     st.header('Entropy vs Log-Likelihood Correlation')
-    st.write("""Correlation between average entropy and average log-likelihood for each cluster.
-            The scatter plot below visualizes the relationship between average entropy and average log-likelihood values for each cluster.
-            Each point represents a cluster of passwords with a specific entropy and log-likelihood value.
-            We can observe that clusters with high entropy values tend to have lower log-likelihood values, 
-            indicating a correlation between password strength (entropy) and predictability (log-likelihood).
-             """)
+    st.write("""
+        This section explores the correlation between the **entropy** and **log-likelihood** of password clusters. We observe that clusters with higher entropy tend to have lower log-likelihood values, reflecting a balance between password randomness and predictability.
+        
+        The scatter plot below highlights this relationship, showing how clusters with high entropy often have lower structural predictability, making them more secure.
+    """)
     plot_entropy_vs_likelihood_by_cluster(ngram_json_path)
 
 # Call the main function to display the page
 if __name__ == "__main__":
     static_clusters_page()
+
