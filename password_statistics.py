@@ -510,7 +510,7 @@ if __name__ == '__main__':
     # Create the directory if it doesn't exist
     os.makedirs('generated_data', exist_ok=True)
 
-    dataset_name = 'rockyou2024-100K.txt'
+    dataset_name = 'rockyou2024-1M.txt'
     passwords, statistics = analyze_passwords(dataset_name)
 
     # Prepare data for JSON serialization
@@ -541,7 +541,6 @@ if __name__ == '__main__':
 
     # Prepare the data to save
     data_to_save = {
-        'passwords': passwords,
         'statistics': statistics
     }
 

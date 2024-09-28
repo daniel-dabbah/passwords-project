@@ -274,14 +274,17 @@ def plot_year_usage(loaded_statistics):
     st.plotly_chart(fig_years, use_container_width=True)
 
 def plot_entropy_distribution(loaded_statistics):
-    """Plot entropy distribution of passwords."""
+    """Plot entropy distribution of passwords"""
     st.header('Entropy Distribution')
     st.write("Entropy measures the unpredictability of passwords. Higher entropy indicates stronger passwords.")
 
     entropies = loaded_statistics.get('entropies', [])
 
+    # Filter the entropies to include only values between 0 and 200
+    filtered_entropies = [entropy for entropy in entropies if 0 <= entropy <= 180]
+
     df_entropy = pd.DataFrame({
-        'Entropy': entropies
+        'Entropy': filtered_entropies
     })
 
     fig_entropy = px.histogram(
@@ -294,6 +297,7 @@ def plot_entropy_distribution(loaded_statistics):
     )
 
     st.plotly_chart(fig_entropy, use_container_width=True)
+
 
 def plot_average_numbers_by_length(loaded_statistics, character_type):
     """Plot the average number of specified character type by password length."""
@@ -500,10 +504,9 @@ def static_visualization_page():
     st.write("Explore various statistics of passwords in the dataset with interactive visualizations.")
 
     # Load the dataset
-    dataset_name = 'rockyou2024-100K.txt'  # Update with your dataset name
+    dataset_name = 'rockyou2024-1M.txt'  # Update with your dataset name
 
     loaded_data = load_data(f'{dataset_name}_data_passwords_statistics.json')
-    loaded_passwords = loaded_data.get('passwords', [])
     loaded_statistics = loaded_data.get('statistics', {})
 
     # Plotting functions
