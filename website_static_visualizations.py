@@ -584,7 +584,6 @@ def static_visualization_page():
     st.write("Dive into the visualizations below to uncover fascinating trends in password habits and gain valuable insights into cybersecurity practices.")
 
     # Load the dataset
-    dataset_name = 'rockyou2024-100K.txt'  # Update with your dataset name
     dataset_name = 'rockyou2024-1M.txt'  # Update with your dataset name
 
     loaded_data = load_data(f'{dataset_name}_data_passwords_statistics.json')
