@@ -14,7 +14,18 @@ def load_data(filename):
 def plot_password_length_distribution(loaded_statistics):
     """Plot the password length distribution."""
     st.header('Password Length Distribution')
-    st.write("Understand the distribution of password lengths.")
+    st.write("""
+    Here we show the distribution of different password lengths. The graph displays the percentage of passwords for each length.
+    
+    We can observe that the distribution forms a curve-like shape. This visualization helps us understand which password lengths are most common among users.
+    
+    Key observations:
+    - The peak of the curve represents the most frequently used password length.
+    - Shorter and longer passwords are less common, forming the tails of the distribution.
+    - This curve shape is typical in password datasets, reflecting users' tendencies to choose passwords of certain lengths.
+
+    Analyzing this distribution can provide insights into user behavior and potential vulnerabilities in password selection.
+    """)
 
     length_percentages = loaded_statistics.get('length_percentages', {})
     lengths = list(map(int, length_percentages.keys()))
@@ -52,8 +63,16 @@ def plot_password_length_distribution(loaded_statistics):
 
 def plot_ascii_character_usage(loaded_statistics):
     """Plot ASCII character usage in passwords."""
-    st.header('ASCII Character Usage')
-    st.write("Discover which ASCII characters are most commonly used in passwords.")
+    st.header('ASCII character usage in passwords')
+    st.write("""
+    This graph shows the distribution of each ASCII character in the dataset. We can observe several interesting patterns:
+
+    1. Lowercase characters are very popular in passwords, indicating a strong preference among users.
+    2. Characters like '?' or '^' are less common. This suggests that incorporating these less frequently used characters could potentially improve password security.
+    3. The varying usage of different characters provides insights into user behavior and potential areas for enhancing password strength.
+
+    Analyzing this distribution can help in understanding common practices in password creation and identifying opportunities for improving password security.
+    """)
 
     ascii_counts = loaded_statistics.get('ascii_counts', {})
 
@@ -90,7 +109,18 @@ def plot_ascii_character_usage(loaded_statistics):
 def plot_password_categories_distribution(loaded_statistics):
     """Plot password categories distribution using treemap."""
     st.header('Password Categories Distribution')
-    st.write("Visualize the distribution of different password characteristics using a treemap.")
+    st.write("""
+    This treemap visualization shows the distribution of different password categories based on their character composition. Here are some key observations:
+
+    1. The 'Lower and Numbers' category is very common, indicating that many users prefer passwords combining lowercase letters and numbers.
+    2. 'Lowercase Only' passwords are also prevalent, suggesting a significant portion of users prefer simple, easily memorable passwords.
+    3. The 'Numbers Only' category is less common, which is a positive sign as such passwords are generally considered weak.
+    4. The 'Upper Special and Numbers' category is one of the least common, indicating that more complex password combinations are less frequently used.
+
+    The size and color intensity of each box in the treemap represent the percentage of passwords falling into that category. Larger, brighter boxes indicate more common categories, while smaller, darker boxes represent less common ones.
+
+    This visualization helps us understand user behavior in password creation and identify areas where password policies might be improved to enhance overall security.
+    """)
     
     # Define the categories and their corresponding percentages
     categories = {
@@ -116,8 +146,6 @@ def plot_password_categories_distribution(loaded_statistics):
         'Percentage': list(categories.values())
     })
 
-    # **Treemap Visualization**
-    st.subheader('Treemap')
     fig_categories_treemap = px.treemap(
         df_categories,
         path=['Category'],
@@ -135,8 +163,22 @@ def plot_password_categories_distribution(loaded_statistics):
 
 def plot_number_position_violin(loaded_statistics):
     """Plot the position of numbers in passwords."""
-    st.header('Position of Numbers in Passwords')
-    st.write("Visualize where numbers are commonly placed within passwords.")
+    st.header('Distribution of Number Positions in Passwords')
+    st.write("""
+    This visualization shows the distribution of number positions in passwords, categorized by password length.
+
+    Key observations:
+    1. Numbers frequently appear at the start and end of passwords.
+    2. The middle sections of passwords often lack numbers.
+    3. The distribution patterns remain relatively consistent across different password lengths.
+
+    Insights:
+    - Users tend to place numbers at password extremities, potentially reducing security.
+    - Incorporating numbers in the middle of passwords could enhance security.
+    - These patterns reveal common user habits in password creation.
+
+    This analysis helps identify areas for improving password strength through better number placement.
+    """)
 
     number_positions = loaded_statistics.get('number_positions', [])
     if number_positions:
@@ -168,8 +210,27 @@ def plot_number_position_violin(loaded_statistics):
 
 def plot_special_character_position_violin(loaded_statistics):
     """Plot the position of special characters in passwords."""
-    st.header('Position of Special Characters in Passwords')
-    st.write("Visualize where special characters are commonly placed within passwords.")
+    st.header('Where Special Characters Appear in Passwords')
+    st.write("""
+    This chart shows where special characters are used in passwords of different lengths. Special characters are characters from this set: !@#$%^&*()-_=+[]{|;:'\,.<>?/`~ }
+
+    When users choose to include special characters in their passwords, we can observe that:
+
+    1. People often put special characters in the middle of their passwords.
+    2. There aren't many special characters at the end of passwords.
+    3. This pattern stays mostly the same, even for different password lengths.
+
+    What this means:
+    - Putting special characters in the middle is a common choice.
+    - Not using special characters at the end might make passwords less secure.
+    - People tend to use special characters in similar ways, regardless of password length.
+
+    Try it yourself:
+    Below, you can type in a symbol from this group: !@#$%^&*()-_=+[]{|;:'\,.<>?/`~
+    You'll see where these special characters usually appear in passwords of different lengths.
+
+    This visualization helps us understand how people use special characters when creating passwords, and how the distribution of these characters varies based on password length.
+    """)
 
     special_char_positions = loaded_statistics.get('special_char_positions', [])
     if special_char_positions:
@@ -201,8 +262,17 @@ def plot_special_character_position_violin(loaded_statistics):
 
 def plot_position_of_specific_special_characters(loaded_statistics):
     """Plot positions of a specific special character entered by the user."""
-    st.header('Position of Specific Special Characters in Passwords')
-    st.write("Visualize where a specific special character is commonly placed within passwords.")
+    st.header('Analyze Special Character Placement in Passwords')
+    st.write("""
+    Discover where specific special characters are commonly placed within passwords.
+    
+    Try it yourself:
+    Enter a symbol from this set: !@#$%^&*()-_=+[]{|;:'\,.<>?/`~
+    
+    You'll see a visualization showing how the chosen special character is distributed 
+    across different password lengths. This can reveal interesting patterns in how people 
+    incorporate special characters into their passwords.
+    """)
 
     special_char_positions_per_char = loaded_statistics.get('special_char_positions_per_char', {})
 
@@ -500,8 +570,18 @@ def plot_distribution_for_length(loaded_statistics, length, character_type):
         st.write(f"No data available for passwords of length {length} and character type '{character_type}'.")
 
 def static_visualization_page():
-    st.title('Password Dataset Visualization')
-    st.write("Explore various statistics of passwords in the dataset with interactive visualizations.")
+    
+    st.write("Welcome to our comprehensive Password Dataset Visualization!")
+    st.write("This interactive page presents an in-depth analysis of 1 million passwords from the rockyou dataset.")
+    st.write("Explore a variety of insightful visualizations that shed light on password creation patterns and potential security implications:")
+    st.markdown("""
+    - Password length distribution
+    - Character type usage (uppercase, lowercase, numbers, special characters)
+    - Positional analysis of specific characters within passwords
+    - Entropy and strength assessment
+    - Common patterns and trends in password creation
+    """)
+    st.write("Dive into the visualizations below to uncover fascinating trends in password habits and gain valuable insights into cybersecurity practices.")
 
     # Load the dataset
     dataset_name = 'rockyou2024-1M.txt'  # Update with your dataset name
@@ -510,10 +590,12 @@ def static_visualization_page():
     loaded_statistics = loaded_data.get('statistics', {})
 
     # Plotting functions
+    
     plot_password_length_distribution(loaded_statistics)
     plot_ascii_character_usage(loaded_statistics)
     plot_password_categories_distribution(loaded_statistics)
     plot_number_position_violin(loaded_statistics)
+    
     plot_special_character_position_violin(loaded_statistics)
     plot_position_of_specific_special_characters(loaded_statistics)
     plot_year_usage(loaded_statistics)
