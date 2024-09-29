@@ -8,8 +8,11 @@ import numpy as np
 import plotly.graph_objects as go
 import os
 from password_strength import calculate_password_strength
+from website_dynamic_strength import dynamic_strength_page
 
 def plot_password_strength_bins():
+
+    dynamic_strength_page()
 
     st.write("""
                  The following Histogram visualizes the distribution of password strengths. 
