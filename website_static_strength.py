@@ -7,7 +7,6 @@ import plotly.io as pio
 import numpy as np
 import plotly.graph_objects as go
 import os
-import mpld3
 from password_strength import calculate_password_strength
 
 def plot_password_strength_bins():
@@ -89,48 +88,53 @@ def plot_strength_of_entropy_clusters():
 
     st.subheader('Entropy Clusters Table')
 
-    st.write("""Might take a few seconds to load
-    """)
+    # json_files_path = ''
+    # entropy_json_name = 'entropy_clusters.json'
+    #
+    # entropy_json_path = os.path.join(json_files_path, entropy_json_name)
+    #
+    # with open(entropy_json_path, 'r', encoding='utf-8') as json_file:
+    #     entropy_clusters = json.load(json_file)
+    #
+    #
+    # cluster_data = []
+    # num_clusters = 0
+    # for entropy, passwords in entropy_clusters.items():
+    #     if len(passwords) > 500 and num_clusters < 20:
+    #         num_clusters += 1
+    #         sample_passwords = passwords[:3]  # Get up to 3 sample passwords
+    #         average_password_strength = 0
+    #         for password in passwords[:500]:
+    #             average_password_strength += calculate_password_strength(password)[0]
+    #         average_password_strength /= 500
+    #         cluster_data.append({
+    #             'Entropy': float(entropy),
+    #             'AVG Strength': round(average_password_strength, 2),
+    #             'Cluster Size': len(passwords),
+    #             'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
+    #             'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
+    #             'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
+    #         })
+    #     if num_clusters >= 20:
+    #         break
+    #
+    # num_clusters = len(cluster_data)
+    # df = pd.DataFrame(cluster_data)
+    #
+    # df = df.sort_values(by='AVG Strength', ascending=False)
+    #
+    # df.to_csv('password_strength_text_files/entropy_cluster_strength.csv', index=False)
 
-    json_files_path = ''
-    entropy_json_name = 'entropy_clusters.json'
+    df = pd.read_csv('password_strength_text_files/entropy_cluster_strength.csv')
 
-    entropy_json_path = os.path.join(json_files_path, entropy_json_name)
-
-    with open(entropy_json_path, 'r', encoding='utf-8') as json_file:
-        entropy_clusters = json.load(json_file)
-
-
-    cluster_data = []
-    num_clusters = 0
-    for entropy, passwords in entropy_clusters.items():
-        if len(passwords) > 300 and num_clusters < 20:
-            num_clusters += 1
-            sample_passwords = passwords[:3]  # Get up to 3 sample passwords
-            average_password_strength = 0
-            for password in passwords[:300]:
-                average_password_strength += calculate_password_strength(password)[0]
-            average_password_strength /= 300
-            # if average_password_strength < 0.1:
-            #     continue
-            cluster_data.append({
-                'Entropy': float(entropy),
-                'AVG Strength': round(average_password_strength, 2),
-                'Cluster Size': len(passwords),
-                'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
-                'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
-                'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
-            })
-        if num_clusters >= 20:
-            break
-
-    num_clusters = len(cluster_data)
-    df = pd.DataFrame(cluster_data)
-
-    df = df.sort_values(by='AVG Strength', ascending=False)
-
+    num_clusters = len(df)
     st.dataframe(df[['Entropy', 'AVG Strength', 'Cluster Size', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
 
+    st.write("""
+            The figure below illustrates the strong correlation between the strength and entropy of passwords. 
+            This relationship makes sense, as higher entropy usually indicates greater uncertainty and 
+            unpredictability, traits that are essential for strong passwords.
+        """)
     correlation = df['Entropy'].corr(df['AVG Strength'])
 
     # Create a figure and axis
@@ -163,56 +167,69 @@ def plot_strength_of_ngram_clusters():
 
     st.subheader('Ngram Clusters Table')
 
-    json_files_path = ''
-    ngram_json_name = 'ngram_clusters.json'
-    ngram_json_path = os.path.join(json_files_path, ngram_json_name)
+    # json_files_path = ''
+    # ngram_json_name = 'ngram_clusters.json'
+    # ngram_json_path = os.path.join(json_files_path, ngram_json_name)
+    #
+    # with open(ngram_json_path, 'r', encoding='utf-8') as json_file:
+    #     ngram_clusters = json.load(json_file)
+    #
+    # # Prepare data for visualization
+    # cluster_data = []
+    # num_clusters = 0
+    # ngram_data_list = []
+    # for log_likelihood, cluster in ngram_clusters['Clusters'].items():
+    #     average_likelihood = cluster['Average Log Likelihood']
+    #     classification = cluster['Classification']
+    #     passwords = cluster['Passwords']
+    #
+    #     # Filter: Only include clusters with log-likelihood > -500 and size > 100
+    #     if num_clusters<20 and len(passwords) > 50:
+    #
+    #         # Extract up to 3 sample passwords
+    #         num_clusters += 1
+    #         num_samples = min(500, len(passwords))
+    #         average_password_strength = 0
+    #         for password in passwords[:num_samples]:
+    #             average_password_strength += calculate_password_strength(password['Password'])[0]
+    #         average_password_strength /= num_samples
+    #
+    #         sample_passwords = [p['Password'] for p in passwords[:3]]
+    #         ngram_data_list.append({
+    #             'Log Likelihood': float(log_likelihood),
+    #             'Average Log Likelihood': average_likelihood,
+    #             'AVG Strength': round(average_password_strength, 2),
+    #             'Classification': classification,
+    #             'Cluster Size': len(passwords),
+    #             'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
+    #             'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
+    #             'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
+    #         })
+    #     if num_clusters >= 20:
+    #         break
+    #
+    # df = pd.DataFrame(ngram_data_list)
+    #
+    # df = df.sort_values(by='AVG Strength', ascending=False)
+    #
+    # df.to_csv('password_strength_text_files/likelihood_cluster_strength.csv', index=False)
 
-    with open(ngram_json_path, 'r', encoding='utf-8') as json_file:
-        ngram_clusters = json.load(json_file)
-
-    # Prepare data for visualization
-    cluster_data = []
-    num_clusters = 0
-    ngram_data_list = []
-    for log_likelihood, cluster in ngram_clusters['Clusters'].items():
-        average_likelihood = cluster['Average Log Likelihood']
-        classification = cluster['Classification']
-        passwords = cluster['Passwords']
-
-        # Filter: Only include clusters with log-likelihood > -500 and size > 100
-        if num_clusters<20 and len(passwords) > 100:
-
-            # Extract up to 3 sample passwords
-            num_clusters += 1
-            num_samples = min(300, len(passwords))
-            average_password_strength = 0
-            for password in passwords[:num_samples]:
-                average_password_strength += calculate_password_strength(password['Password'])[0]
-            average_password_strength /= num_samples
-
-            sample_passwords = [p['Password'] for p in passwords[:3]]
-            ngram_data_list.append({
-                'Log Likelihood': float(log_likelihood),
-                'Average Log Likelihood': average_likelihood,
-                'AVG Strength': round(average_password_strength, 2),
-                'Classification': classification,
-                'Cluster Size': len(passwords),
-                'Sample Password 1': sample_passwords[0] if len(sample_passwords) > 0 else '',
-                'Sample Password 2': sample_passwords[1] if len(sample_passwords) > 1 else '',
-                'Sample Password 3': sample_passwords[2] if len(sample_passwords) > 2 else ''
-            })
-        if num_clusters >= 20:
-            break
-
-
-    num_clusters = len(ngram_data_list)
-    df = pd.DataFrame(ngram_data_list)
-
-    df = df.sort_values(by='AVG Strength', ascending=False)
+    df = pd.read_csv('password_strength_text_files/likelihood_cluster_strength.csv')
+    num_clusters = len(df)
 
     st.dataframe(df[['Average Log Likelihood', 'AVG Strength', 'Cluster Size', 'Classification', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
 
-
+    st.write("""
+                In the figure below we can see that the likelihood of a password is also highly correlated
+                with its strength. 
+                Which again makes sense as a low likelihood suggests the presence of unlikely sequences 
+                of characters, making it harder to crack using brute force algorithms.
+            """)
+    st.write("""
+                * Notice that the likelihood scale is flipped, meaning that higher values are displayed 
+                lower in the plot and lower values are displayed higher. This inversion allows for a 
+                better perspective on the relationship between the two metrics.
+                    """)
     correlation = df['Average Log Likelihood'].corr(df['AVG Strength'])
     # Create a figure and axis
     fig, ax1 = plt.subplots(figsize = (12, 5))
@@ -224,6 +241,8 @@ def plot_strength_of_ngram_clusters():
     ax1.plot(range(1, num_clusters+1), df['Average Log Likelihood'], color=color, marker='o')
     ax1.tick_params(axis='y', labelcolor=color)
 
+    # Invert the scale of the second y-axis
+    ax1.set_ylim(ax1.get_ylim()[::-1])  # Reverse the y-axis limits
     ax1.set_xticks(range(1, num_clusters+1))
 
     # Create a secondary y-axis to plot AVG Strength
@@ -275,12 +294,76 @@ def plot_strength_of_minhash_clusters():
         if num_clusters >= 10:
             break
 
-
     df = pd.DataFrame(minhash_cluster_data)
 
     df = df.sort_values(by='AVG Strength', ascending=False)
 
     st.dataframe(df[['Cluster Label', 'AVG Strength', 'Cluster Size', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
+
+def plot_cracked_passwords_strength_histogram():
+    directory_path = "password_strength_text_files/"
+
+    # file_name = "cracked_passwords.txt"
+    # with open(directory_path + file_name, 'r') as f:
+    #     cracked_passwords = f.readlines()
+    #
+    # legit_passwords = set()
+    # for p in cracked_passwords:
+    #     p = p.replace("\n", "")
+    #
+    #     # remove too long passwords
+    #     if len(p) > 35:
+    #         continue
+    #
+    #     legit_passwords.add(p)
+    #
+    # cracked_passwords = list(legit_passwords)
+    #
+    # bins = np.zeros(10)
+    # scores = list()
+    # for p in cracked_passwords:
+    #     score, p1 = calculate_password_strength(p)
+    #     scores.append({'Password' : p, 'Score' : score})
+    #     if score >= 10:
+    #         score = 9.9
+    #     bins[int(score)] += 1
+    #
+    #
+    # df = pd.DataFrame(scores)
+    #
+    # df = df.sort_values(by='Score', ascending=False)
+    #
+    #
+    # df.to_csv('password_strength_text_files/cracked_password_scores.csv', index=False)
+
+    df = pd.read_csv('password_strength_text_files/cracked_password_scores.csv')
+
+    st.dataframe(df[['Password', 'Score']])
+
+
+    # # Convert NumPy array to a list
+    # bins_list = bins.tolist()
+
+    # Save as JSON
+    # with open(directory_path + 'cracked_password_strength_bins.json', 'w') as f:
+    #     json.dump(bins_list, f)
+
+    with open(directory_path + 'cracked_password_strength_bins.json', 'r') as f:
+        bins_list = json.load(f)
+
+    bins = np.array(bins_list)
+
+    fig = plt.figure(figsize = (13, 4))
+
+    plt.bar(range(10), bins, color ='midnightblue')
+
+    plt.xlabel("Password Strength Score", fontsize=18)
+    plt.ylabel("Number of Passwords", fontsize=18)
+    plt.title("Password Scores Histogram", fontsize=23)
+    plt.xticks(ticks = range(0, 10), labels=["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7",
+                                             "7-8", "8-9", "9-10"], fontsize=14)
+
+    st.pyplot(fig)
 
 
 def static_strength_page():
@@ -302,10 +385,16 @@ def static_strength_page():
 
     plot_password_strength_scatter()
 
+    st.subheader('Cracked passwords strength distribution')
+
+    plot_cracked_passwords_strength_histogram()
+
     st.subheader('Measuring the average password strength of different clusters')
 
     plot_strength_of_entropy_clusters()
 
     plot_strength_of_ngram_clusters()
 
-    # plot_strength_of_minhash_clusters()   # not very informative
+    # plot_strength_of_minhash_clusters()   # commented because not informative
+
+

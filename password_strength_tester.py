@@ -5,7 +5,6 @@ import re
 import plotly.express as px
 import pandas as pd
 import json
-import mpld3
 from password_strength_helper import (automatic_deny, give_character_type_score,
                                       calc_modified_password_score, remove_pattern)
 from password_strength import calculate_password_strength

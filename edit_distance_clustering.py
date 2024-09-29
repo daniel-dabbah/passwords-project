@@ -7,7 +7,7 @@ from tqdm import tqdm
 from difflib import SequenceMatcher
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
-from wordcloud import WordCloud
+# from wordcloud import WordCloud
 import plotly.figure_factory as ff
 
 def transform_string(s):
