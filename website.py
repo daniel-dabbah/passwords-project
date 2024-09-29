@@ -19,28 +19,24 @@ def main():
     page = 'Password Strength Analysis'
     # Sidebar with page options
     page = st.sidebar.radio(
-        'Choose a Page', ['Introduction', 'General Password Analysis', 
-                          'Check Your Password Strength',
-                          'Password Strength Statistics', 'Password Strength Analysis'])
+        'Choose a Page', ['Introduction', 'Breached Password Analysis', 
+                          'Check Your Password Statistics',
+                          'Check Your Password Strength'])
     
     if page == 'Introduction':
         website_introduction()
 
-    if page == 'General Password Analysis':
-        st.header('General Password Analysis')
+    if page == 'Breached Password Analysis':
+        st.header('Breached Password Analysis')
         static_visualization_page()
 
-    elif page == 'Check Your Password Strength':
-        st.header('Check Your Password Strength')
+    elif page == 'Check Your Password Statistics':
+        st.header('Check Your Password Statistics')
         dynamic_visualization_page()
        
-    elif page == 'Password Strength Statistics':
-        st.header('Password Strength Statistics')
+    elif page == 'Check Your Password Strength':
+        st.header('Check Your Password Strength')
         static_strength_page()
-
-    elif page == 'Password Strength Analysis':
-        st.header('Password Strength Analysis')
-        dynamic_strength_page()
 
 
 if __name__ == "__main__":

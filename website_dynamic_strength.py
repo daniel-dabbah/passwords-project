@@ -47,6 +47,10 @@ def dynamic_strength_page():
     if password:
         bars[rounded_password_score].set_color('red')
         ax.get_xticklabels()[rounded_password_score].set_color('red')
+    
+    plt.xlabel("Password Strength Score", fontsize=10)
+    plt.ylabel("Number of Passwords", fontsize=10)
+    plt.title("Password Scores Histogram", fontsize=15)
 
     st.pyplot(fig)
 
