@@ -145,16 +145,18 @@ def plot_ngram_clusters(ngram_clusters):
         color_continuous_scale=px.colors.sequential.Viridis
     )
 
-    # Update the hover template to include the sample passwords
+    # Update the hover template to show only average log-likelihood and 3 sample passwords
     ngram_fig.update_traces(
         hovertemplate=(
-            '<b>Log Likelihood:</b> %{x:.2f}<br>'
+            '<b>Average Log Likelihood:</b> %{customdata[0]:.2f}<br>'
             '<b>Cluster Size:</b> %{y}<br>'
-            '<b>Classification:</b> %{customdata[0]}<br>'
-            '<b>Sample Passwords:</b><br>%{customdata[1]}<br>'
+            '<b>Sample Passwords:</b><br>'
+            '- %{customdata[1]}<br>'
+            '- %{customdata[2]}<br>'
+            '- %{customdata[3]}<br>'
             '<extra></extra>'
         ),
-        customdata=ngram_df[['Classification', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']].values  # Add sample passwords to customdata
+        customdata=ngram_df[['Average Log Likelihood', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']].values
     )
 
     # Add a vertical line for the threshold
