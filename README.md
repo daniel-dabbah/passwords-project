@@ -12,6 +12,8 @@
 
 - **Carmit Yehudai: [Carmitch.yehudai@mail.huji.ac.il](mailto:Carmitch.yehudai@mail.huji.ac.il)**
 
+![alt text](https://tresorit.com/blog/content/images/size/w2000/2024/03/StrongPasswords_blogcover_withoutlogo@2x.png)
+
 
 
 ### Problem Description
