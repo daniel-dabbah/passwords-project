@@ -50,18 +50,29 @@ def dynamic_strength_page():
 
     st.pyplot(fig)
 
+    score_with_words = "Very Weak"
+    if password_score > 8:
+        score_with_words = "Very Strong"
+    elif password_score > 6:
+        score_with_words = "Strong"
+    elif password_score > 4:
+        score_with_words = "Medium"
+    elif password_score > 2:
+        score_with_words = "Weak"
+    else:
+        score_with_words = "Very Weak"
+
+
     if password:
         st.subheader("**Score Breakdown**")
         st.write(f"""
-                     **Your Password**: {password} \n 
+                     **Your Password**: {password}  , your password is {score_with_words} \n 
                      **Your score**: {password_score} \n
-                     **Your rounded score**: {rounded_password_score} \n 
                      **Your unmodified score**: {unmodified_score / 3.1} \n
-                     **Your password without punctuation score**: {remove_special_score / 3} \n
-                     **Your password with removed pattern score**: {remove_pattern_score / 3.1}\n
-                     **Password with removed pattern**: {removed_pattern}
+                     **Score of password with removed punctuation and digit sequences**: {remove_special_score / 3} \n
+                     **Score of password with common sequences removed**: {remove_pattern_score / 3.1}\n
+                     **password with common sequences removed**: {removed_pattern}
                 """)
-
 
 
 

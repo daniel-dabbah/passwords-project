@@ -170,6 +170,12 @@ def calc_modified_password_score(p):
     password_score += len(p) * 1.9
     password_score -= longest_digit_substring(p)
     password_score -= longest_single_char_substring(p)
+    if len(p) < 6:
+        password_score -= 2
+    if len(p) < 8:
+        password_score -= 2
+    if len(p) < 10:
+        password_score -= 2
     if contains_date(p):
         password_score -= 6
     return min(password_score, 31)
@@ -178,8 +184,13 @@ def calc_no_special_password_score(p):
     password_score = give_different_character_score(p)
     password_score += len(p) * 1.9
     password_score -= (longest_single_char_substring(p) * 2)
+    if len(p) < 6:
+        password_score -= 2
+    if len(p) < 8:
+        password_score -= 2
+    if len(p) < 10:
+        password_score -= 2
     if contains_date(p):
         password_score -= 6
     return min(password_score, 30)
-
 
