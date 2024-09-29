@@ -594,7 +594,7 @@ def plot_distribution_for_length(loaded_statistics, length, character_type):
 def static_visualization_page():
     
     st.write("Welcome to our comprehensive Password Dataset Visualization!")
-    st.write("This interactive page presents an in-depth analysis of 1 million passwords from the rockyou dataset.")
+    st.write("This interactive page presents an in-depth analysis of 1 million passwords from the rockyou 2024 dataset, a collection of real-world passwords from various data breaches.\n")
     st.write("Explore a variety of insightful visualizations that shed light on password creation patterns and potential security implications:")
     st.markdown("""
     - Password length distribution
@@ -602,6 +602,7 @@ def static_visualization_page():
     - Positional analysis of specific characters within passwords
     - Entropy and strength assessment
     - Common patterns and trends in password creation
+    - Clustering analysis by entropy, MinHash, and N-gram log-likelihood
     """)
     st.write("Dive into the visualizations below to uncover fascinating trends in password habits and gain valuable insights into cybersecurity practices.")
 

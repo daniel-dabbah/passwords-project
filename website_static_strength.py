@@ -14,6 +14,7 @@ def plot_password_strength_bins():
 
     dynamic_strength_page()
 
+    st.header('Password Strength Distribution')
     st.write("""
                  The following Histogram visualizes the distribution of password strengths. 
                  We can see that many people use a rather simple password but 
@@ -31,7 +32,7 @@ def plot_password_strength_bins():
 
     plt.xlabel("Password Strength Score", fontsize=18)
     plt.ylabel("Number of Passwords", fontsize=18)
-    plt.title("Password Scores Histogram", fontsize=23)
+    plt.title("Cracked Passwords Strength Histogram", fontsize=23)
     plt.xticks(ticks = range(0, 10), labels=["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7",
                                              "7-8", "8-9", "9-10"], fontsize=14)
 
@@ -40,22 +41,10 @@ def plot_password_strength_bins():
 
 def plot_password_strength_scatter():
     st.write("""
-                 The scatter plot below we show the distibution in a different way that allows us to explore 
-                 the strength of passwords with more depth and to manually analyze what kind of passwords
-                 achieve a good score and which get a bad score. \n
-                 For each password we can also see the 
-                 modified version of the password (where we removed common words and patterns) which can
-                 give an insight to what kind of patters we are looking for.
-                 \n
-                 We can also see that some passwords get a score of zero as they can be cracked in a 
-                 matter of minutes using a simple predefined brute force algorithm. 
-                 \n
-                 Also we see that a few passwords achieve a perfect 10, this are passwords for which we 
-                 cannot point to any significant weaknesses.
+                 The scatter plot below presents the password strength distribution, offering deeper insights into which passwords score well and which perform poorly. For each password, we also show a modified version (with common words and patterns removed), allowing us to see the specific patterns we aim to avoid. Some passwords score a perfect 10, indicating no notable weaknesses, while others score 0, as they can be cracked in minutes using a simple brute-force algorithm.
             """)
-
     st.write("""
-                     * notice that password that have the pattern of an email address get a 0, 
+                     Notice that password that have the pattern of an email address get a 0, 
                      because the password is likely identical or very similar to the users email. 
                 """)
     df = pd.read_csv('password_strength_dataframe.csv')
@@ -360,9 +349,9 @@ def plot_cracked_passwords_strength_histogram():
 
     plt.bar(range(10), bins, color ='midnightblue')
 
-    plt.xlabel("Password Strength Score", fontsize=18)
-    plt.ylabel("Number of Passwords", fontsize=18)
-    plt.title("Password Scores Histogram", fontsize=23)
+    plt.xlabel("Password Strength Score", fontsize=15)
+    plt.ylabel("Number of Passwords", fontsize=15)
+    plt.title("Cracked Passwords Strength Histogram", fontsize=17)
     plt.xticks(ticks = range(0, 10), labels=["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7",
                                              "7-8", "8-9", "9-10"], fontsize=14)
 
@@ -371,15 +360,8 @@ def plot_cracked_passwords_strength_histogram():
 
 def static_strength_page():
     st.write("""
-                 In our project we defined a method for evaluating the strength of passwords. 
-                 the method is on the conclusions we have derived from the analysis we performed on our password
-                 datasets and from the statistics we have gathered. \n
-                 he method mainly looks at some simple features of the password such as the length of the password, 
-                 the number of different characters, and whether it uses different character types such as 
-                 lowercase and uppercase letters, digits, punctuation and other symbols, 
-                 where we consider passwords that include more types and more different characters as 
-                 better and harder to crack. The method also tries to detect common words and patterns and 
-                 penalizes the score for any such word or pattern that we have managed to detect.
+                 Try our Password Strength Algorithm! \n
+                Our algorithm examines basic features such as the password’s length, number of unique characters, and use of different character types, as well as advanced techniques, such as regular expressions to detect common patterns and predefined lists to identify passwords containing popular words and numbers.
             """)
 
     plot_password_strength_bins()
@@ -388,11 +370,12 @@ def static_strength_page():
 
     plot_password_strength_scatter()
 
-    st.subheader('Cracked passwords strength distribution')
+    st.subheader('Cracked Passwords Strength Examples')
 
     plot_cracked_passwords_strength_histogram()
 
-    st.subheader('Measuring the average password strength of different clusters')
+    st.subheader('Measuring Average Password Strengts in Clusters')
+    st.write('This section provides insights into the strength of passwords in different clusters based on entropy and n-gram likelihood.')
 
     plot_strength_of_entropy_clusters()
 

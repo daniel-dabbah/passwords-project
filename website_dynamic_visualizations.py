@@ -1163,8 +1163,9 @@ def dynamic_visualization_page():
     loaded_statistics = loaded_data['statistics']
     
     st.write("""
-    Welcome to our Password Analysis Tool!\n
-    Here, you can enter a password to see how it compares to 1 million other passwords from the RockYou dataset.
+    Try our Password Statistical Analysis Tool!\n
+    Here, you can enter a password to see how it compares to 1 million other passwords from the RockYou 2024 dataset,
+    a collection of real-world passwords from various data breaches.\n
     We'll provide you with insights on how to improve your password's strength and uniqueness.
     You'll also receive an entropy score, which measures the randomness and unpredictability of your password.\n
     Don't worry - we won't store your password. All analysis is done locally.\n
@@ -1208,7 +1209,7 @@ def dynamic_visualization_page():
     plot_password_length_distribution(loaded_statistics, password_length)
     plot_ascii_character_usage(loaded_statistics, user_chars)
     plot_password_categories_distribution(loaded_statistics, password, special_chars="!@#$%^&*()-_=+[]{|;:'\,.<>?/`~ }")
-    plot_special_character_usage(loaded_statistics, user_special_chars)
+    # plot_special_character_usage(loaded_statistics, user_special_chars)
 
     plot_year_usage_histogram(loaded_statistics, user_years)
     plot_entropy_distribution(loaded_statistics, entropy_value)

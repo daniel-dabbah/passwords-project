@@ -1,65 +1,45 @@
 import streamlit as st
-import json
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
-import re
-
 
 def website_introduction():
+    st.title('Welcome to the Password Strength Analysis Dashboard')
 
-    st.title('Introduction')
+    st.write('''
+    In an age of increasing data breaches, understanding password strength is essential to enhancing personal and organizational security.
+    Our interactive dashboard provides a comprehensive analysis of breached passwords and offers real-time insights on the security of passwords users create.
+    Whether you’re curious about common password vulnerabilities or want to check the robustness of your own password, this tool is designed to help.
+    ''')
+
+    st.write('''
+    ## Explore Our Dashboard
+    Our application offers three key sections:
     
-    st.write('''
-    This web application is designed to analyze the strength of passwords and provide insights into the characteristics of different passwords.
-    The application uses a dataset of passwords to generate visualizations and statistics on password strength.
+    1. **Breached Password Analysis**:  
+       Analyze a dataset of breached passwords to uncover patterns in password creation, including length distribution, character composition, and common vulnerabilities. Visualizations reveal key insights into how passwords from real-world breaches compare in terms of strength and predictability.
+    
+    2. **Check Your Password Statistics**:  
+       Input your password to see how it compares to others in terms of length, character variety, and more. This page provides detailed statistics, showing how your password ranks against breached passwords and highlights areas where it could be improved.
+    
+    3. **Check Your Password Strength**:  
+       Evaluate the strength of your password in real-time. Our algorithm calculates an entropy score, detects patterns or weaknesses, and suggests improvements. The password strength is measured on a scale of 0 to 10, helping you ensure that your password is resilient against cracking attempts.
     ''')
 
     st.write('''
-    ## Password Dataset
-    The dataset used in this application contains a list of passwords obtained from various sources.
-    The dataset includes passwords that have been leaked or exposed in data breaches.
-    The passwords are stored in plain text format, and the dataset is used for analysis purposes only.
+    ## Key Features:
+    - **Visualize Common Password Patterns**: Discover patterns like most used password lengths, popularity of certain characters, and typical positions of numbers or special symbols.
+    - **Real-Time Feedback**: Input a password and instantly receive feedback on its strength, character usage, and entropy.
+    - **Clustering Analysis**: Explore password clusters based on factors like entropy, MinHash similarity, and N-gram log-likelihood, helping you understand how your password stands in comparison to others.
     ''')
 
     st.write('''
-    ## Password Strength Analysis
-    The application provides two main types of analysis:
-    1. **General Password Analysis**: This analysis includes visualizations and statistics on the dataset of passwords.
-    2. **Interactive Password Analysis**: This analysis allows users to input their own passwords for analysis.
-    ''')
-
-    st.write('''       
-    ## Clustering Analysis
-    The application also includes a clustering analysis of passwords based on their similarity.
-    The clustering analysis groups passwords into clusters based on their common characteristics.
+    ## Our Mission:
+    The goal of this tool is not only to highlight weaknesses in common password creation practices but also to help users create stronger, more resilient passwords.
+    We aim to empower users with the knowledge they need to stay secure online by providing actionable insights based on extensive analysis of real-world password data.
     ''')
 
     st.write('''
-    ## Password Strength Statistics
-    The application provides statistics on the strength of passwords in the dataset.
-    The statistics include information on password length, character types, and common patterns.
+    ## Get Started
+    Navigate through the different sections of the dashboard and start exploring the insights and security tips we provide. Whether you are analyzing breached passwords or testing your own, our platform will guide you in understanding the key elements of password security.
     ''')
 
-    st.write('''
-    ## Password Strength Analysis
-    The application analyzes the strength of passwords based on common password strength criteria.
-    The analysis includes checks for password length, character types, and common patterns.
-    ''')
-
-    st.write('''
-    ## Conclusion
-    This web application provides a comprehensive analysis of password strength and characteristics.
-    Users can explore the visualizations, statistics, and analysis results to gain insights into password security.
-    ''')
-
-    st.write('''    
-
-    ## References
-    - [Streamlit Documentation](https://docs.streamlit.io/)
-    - [Plotly Documentation](https://plotly.com/python/)
-    - [Pandas Documentation](https://pandas.pydata.org/docs/)
-    - [Numpy Documentation](https://numpy.org/doc/)
-    - [Python Regular Expressions Documentation](https://docs.python.org/3/library/re.html)
-    ''')
+if __name__ == "__main__":
+    website_introduction()

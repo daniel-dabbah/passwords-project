@@ -20,18 +20,14 @@ from password_strength import calculate_password_strength
 
 
 def dynamic_strength_page():
-    st.write(
-        """The password length histogram provides insights into the distribution of password lengths in the dataset. 
-        It helps us understand common password length preferences and potential 
-        vulnerabilities related to short passwords.""")
-
+    
     with open('password_strength_bins.json', 'r') as f:
         bins_list = json.load(f)
 
     bins = np.array(bins_list)
 
     password = st.text_input("Enter a password for analysis",
-                             help="Type your password here to see how it compares to common length patterns")
+                             help="Type your password here to see how strong it is.")
     st.caption("Your password will be analyzed locally and not stored or transmitted.")
 
     scores = calculate_password_strength(password, with_details=True)

@@ -35,7 +35,7 @@ def plot_entropy_vs_likelihood_by_cluster(cluster_json):
 
     # Create a scatter plot for average entropy vs average log-likelihood at the cluster level
     fig = px.scatter(df, x='Average Log Likelihood', y='Average Entropy', color='Classification',
-                     title='Correlation between Average Log-Likelihood and Entropy',
+                     title='Relationship between Average Log-Likelihood and Entropy',
                      labels={'Average Log Likelihood': 'Average Log Likelihood', 'Average Entropy': 'Average Entropy'},
                      size='Cluster Size',  # Use cluster size to scale marker size
                      color_discrete_map={'Meaningful': 'green', 'Gibberish': 'red'})
@@ -374,6 +374,8 @@ def static_clusters_page():
         - **Gibberish passwords** appear more random and unpredictable, providing stronger protection against such attacks.
         
         In this clustering method, we calculate the n-gram log-likelihood of each password and group them into clusters. A **threshold** is used to distinguish between meaningful and gibberish clusters, and the visualization shows the distribution of passwords based on this metric.
+             We can observe how passwords are grouped based on their structural predictability and linguistic patterns.
+             Notice that the clusters that are classified as meaningful are also the bigger clusters, indicating that the datset contains a lot of common passwords.
     """)
     plot_ngram_clusters(ngram_clusters)
 
