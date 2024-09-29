@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import re
+from website_static_clusters import static_clusters_page
 
 def load_data(filename):
     """Load data from a JSON file."""
@@ -643,6 +644,13 @@ def static_visualization_page():
     length = st.number_input('Password Length:', min_value=1, max_value=30, value=8, step=1)
 
     plot_average_numbers_for_length(loaded_statistics, length)
+
+    """ Clustering Analysis """ 
+    st.write("## Clustering Analysis")
+    st.write("Explore the clustering analysis of passwords based on their similarity.")
+    static_clusters_page()
+
+
 
 if __name__ == '__main__':
     static_visualization_page()

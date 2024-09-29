@@ -409,10 +409,10 @@ def static_clusters_page():
     else:
         st.warning("MinHash clusters with similarities file not found.")
 
-    """ Entropy vs Log-Likelihood Correlation """
-    st.header('Entropy vs Log-Likelihood Correlation')
+    """ Entropy vs Log-Likelihood """
+    st.header('Entropy vs Log-Likelihood')
     st.write("""
-        This section explores the correlation between the **entropy** and **log-likelihood** of password clusters. We observe that clusters with higher entropy tend to have lower log-likelihood values, reflecting a balance between password randomness and predictability.
+        This section explores the relationship between the **entropy** and **log-likelihood** of password clusters. We observe that clusters with higher entropy tend to have lower log-likelihood values, reflecting a balance between password randomness and predictability.
         
         The scatter plot below highlights this relationship, showing how clusters with high entropy often have lower structural predictability, making them more secure.
     """)
