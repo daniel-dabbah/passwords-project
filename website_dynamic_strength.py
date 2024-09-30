@@ -20,8 +20,7 @@ from password_strength import calculate_password_strength
 
 
 def dynamic_strength_page():
-    
-    with open('password_strength_bins.json', 'r') as f:
+    with open('json_files/password_strength_bins.json', 'r') as f:
         bins_list = json.load(f)
 
     bins = np.array(bins_list)

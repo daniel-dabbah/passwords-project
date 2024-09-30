@@ -9,6 +9,8 @@ from website_static_clusters import static_clusters_page
 
 def load_data(filename):
     """Load data from a JSON file."""
+    path = 'json_files'
+    filename = f'{path}/{filename}'
     with open(filename, 'r') as f:
         return json.load(f)
 

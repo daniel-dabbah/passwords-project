@@ -5,6 +5,7 @@ from sklearn.manifold import MDS
 
 # Function to load clusters and similarities from the JSON file
 def load_clusters_and_similarities(json_file):
+    json_file_path = os.path.join("json_files", json_file)
     with open(json_file, 'r', encoding='utf-8') as file:
         data = json.load(file)
     clusters = data['Clusters']

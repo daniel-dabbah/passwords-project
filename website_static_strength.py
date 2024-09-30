@@ -254,7 +254,7 @@ def plot_strength_of_minhash_clusters():
 
     st.subheader('Minhash Clusters Table')
 
-    json_files_path = ''
+    json_files_path = 'json_files'
     minhash_json_name = 'minhash_clusters.json'
 
     minhash_json_path = os.path.join(json_files_path, minhash_json_name)

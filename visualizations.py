@@ -477,13 +477,10 @@ if __name__ == '__main__':
     # Create the directory if it doesn't exist
     os.makedirs('generated_plots', exist_ok=True)
 
-    #TODO: change to rockyuoi 2024-100K.txt
-    dataset_name = 'rockyou_mini.txt'
-    dataset_name = 'rockyou2024-100K.txt'
+    # dataset_name = 'rockyou_mini.txt'
+    # dataset_name = 'rockyou2024-100K.txt'
     dataset_name = 'rockyou2024-1M.txt'
     passwords, statistics = ps.analyze_passwords(dataset_name)
-
-    
 
     # Save passwords and statistics to a file
     data_to_save = {

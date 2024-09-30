@@ -317,7 +317,7 @@ def visualize_clusters(cluster_names, cluster_sizes, cluster_examples, similarit
 
 def static_clusters_page():
 
-    json_files_path = ''
+    json_files_path = 'json_files'
     entropy_json_name = 'entropy_clusters.json'
     ngram_json_name = 'ngram_clusters.json'
     minhash_json_name = 'minhash_clusters.json'

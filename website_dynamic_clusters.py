@@ -12,6 +12,7 @@ from sklearn.manifold import MDS
 
 # Function to load n-gram probabilities from JSON
 def load_ngram_probabilities(ngram_prob_path):
+    ngram_prob_path = os.path.join("json_files", ngram_prob_path)
     with open(ngram_prob_path, 'r', encoding='utf-8') as file:
         ngram_probs = json.load(file)
     return ngram_probs

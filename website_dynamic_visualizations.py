@@ -1159,9 +1159,9 @@ def dynamic_visualization_page():
    # Load the dataset
     dataset_name = 'rockyou2024-1M.txt'  # Update with your dataset name
 
-    loaded_data = load_data(f'{dataset_name}_data_passwords_statistics.json')
+    loaded_data = load_data(f'json_files/{dataset_name}_data_passwords_statistics.json')
     loaded_statistics = loaded_data['statistics']
-    
+
     st.write("""
     Try our Password Statistical Analysis Tool!\n
     Here, you can enter a password to see how it compares to 1 million other passwords from the RockYou 2024 dataset,
@@ -1228,7 +1228,7 @@ def dynamic_visualization_page():
     By inputting your password, you will be able to compare it to known password clusters and find its closest matches based on each of these clustering techniques.
     """)
 
-    json_files_path = ''
+    json_files_path = 'json_files'
     entropy_json_name = 'entropy_clusters.json'
     minhash_json_name = 'minhash_clusters.json'
     ngram_prob_name = 'ngram_probs.json'
