@@ -1174,7 +1174,7 @@ def dynamic_visualization_page():
     """)
 
      # Page for inserting a password
-    st.subheader('Insert Password for Clustering Analysis')
+    st.subheader('Insert Password for Analysis')
     st.write("Please enter your password below.")
     password = st.text_input("Enter a password for analysis",
                              help="Type your password here to see how it compares to common length patterns")

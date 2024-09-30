@@ -13,31 +13,31 @@ from website_dynamic_strength import dynamic_strength_page
 def plot_password_strength_bins():
 
     dynamic_strength_page()
-
-    st.header('Password Strength Distribution')
     st.write("""
-                 The following Histogram visualizes the distribution of password strengths. 
-                 We can see that many people use a rather simple password but 
-                 most of them do try (or are forced by the security demands to incorporate different character types)
-                 to make the password a bit more complex.
-            """)
-    with open('password_strength_bins.json', 'r') as f:
-        bins_list = json.load(f)
+        The scatter plot below provides a detailed and engaging look at password strength, with scores ranging from 0 to 10.
+        Each dot represents a password, and when you hover over it, you'll see both the original and a modified version, 
+        where common words or patterns have been removed. This helps highlight which patterns make passwords more predictable and vulnerable.
 
-    bins = np.array(bins_list)
+        Notice the density of passwords between scores of 1 and 6, indicating many have notable weaknesses. 
+        On the other hand, some passwords score a perfect 10, showcasing strong security with no major vulnerabilities, 
+        while others, such as email-like passwords, score 0, meaning they can be cracked within minutes using basic brute-force techniques.
+    """)
 
-    fig = plt.figure(figsize = (13, 4))
+    # with open('password_strength_bins.json', 'r') as f:
+    #     bins_list = json.load(f)
 
-    plt.bar(range(10), bins, color ='midnightblue')
+    # bins = np.array(bins_list)
 
-    plt.xlabel("Password Strength Score", fontsize=18)
-    plt.ylabel("Number of Passwords", fontsize=18)
-    plt.title("Cracked Passwords Strength Histogram", fontsize=23)
-    plt.xticks(ticks = range(0, 10), labels=["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7",
-                                             "7-8", "8-9", "9-10"], fontsize=14)
+    # fig = plt.figure(figsize = (13, 4))
 
+    # plt.bar(range(10), bins, color ='midnightblue')
 
-    st.pyplot(fig)
+    # plt.xlabel("Password Strength Score", fontsize=18)
+    # plt.ylabel("Number of Passwords", fontsize=18)
+    # plt.title("Cracked Passwords Strength Histogram", fontsize=23)
+    # plt.xticks(ticks = range(0, 10), labels=["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7",
+    #                                          "7-8", "8-9", "9-10"], fontsize=14)
+    # st.pyplot(fig)
 
 def plot_password_strength_scatter():
     st.write("""
@@ -123,7 +123,7 @@ def plot_strength_of_entropy_clusters():
     st.dataframe(df[['Entropy', 'AVG Strength', 'Cluster Size', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
 
     st.write("""
-            The figure below illustrates the strong correlation between the strength and entropy of passwords. 
+            The figure below illustrates the strong correlation between the strength and entropy of passwords. \n
             This relationship makes sense, as higher entropy usually indicates greater uncertainty and 
             unpredictability, traits that are essential for strong passwords.
         """)
@@ -134,7 +134,7 @@ def plot_strength_of_entropy_clusters():
 
     # Plot Entropy with the primary y-axis
     color = 'tab:blue'
-    ax1.set_xlabel('Cluster Strength Rank')
+    ax1.set_xlabel('Cluster Index')
     ax1.set_ylabel('Entropy', color=color)
     ax1.plot(range(1, num_clusters+1), df['Entropy'], color=color, marker='o')
     ax1.tick_params(axis='y', labelcolor=color)
@@ -212,23 +212,22 @@ def plot_strength_of_ngram_clusters():
     st.dataframe(df[['Average Log Likelihood', 'AVG Strength', 'Cluster Size', 'Classification', 'Sample Password 1', 'Sample Password 2', 'Sample Password 3']])
 
     st.write("""
-                In the figure below we can see that the likelihood of a password is also highly correlated
-                with its strength. 
-                Which again makes sense as a low likelihood suggests the presence of unlikely sequences 
-                of characters, making it harder to crack using brute force algorithms.
-            """)
+    The figure below illustrates a strong negative correlation between a password's likelihood and its strength. 
+    This means that passwords with lower likelihood values, indicating less common or predictable sequences, 
+    tend to have higher strength, making them harder to crack with brute-force methods.
+    """)
     st.write("""
-                * Notice that the likelihood scale is flipped, meaning that higher values are displayed 
-                lower in the plot and lower values are displayed higher. This inversion allows for a 
-                better perspective on the relationship between the two metrics.
-                    """)
+        * Note that the likelihood scale is inverted in the plot, where higher likelihood values appear lower and lower values are displayed higher. 
+        This inversion provides a clearer perspective on the relationship between likelihood and password strength.
+    """)
+
     correlation = df['Average Log Likelihood'].corr(df['AVG Strength'])
     # Create a figure and axis
     fig, ax1 = plt.subplots(figsize = (12, 5))
 
     # Plot Entropy with the primary y-axis
     color = 'tab:blue'
-    ax1.set_xlabel('Cluster Strength Rank')
+    ax1.set_xlabel('Cluster Index')
     ax1.set_ylabel('Average Log Likelihood', color=color)
     ax1.plot(range(1, num_clusters+1), df['Average Log Likelihood'], color=color, marker='o')
     ax1.tick_params(axis='y', labelcolor=color)
@@ -355,7 +354,7 @@ def plot_cracked_passwords_strength_histogram():
     plt.xticks(ticks = range(0, 10), labels=["0-1", "1-2", "2-3", "3-4", "4-5", "5-6", "6-7",
                                              "7-8", "8-9", "9-10"], fontsize=14)
 
-    st.pyplot(fig)
+    # st.pyplot(fig)
 
 
 def static_strength_page():
@@ -370,12 +369,21 @@ def static_strength_page():
 
     plot_password_strength_scatter()
 
-    st.subheader('Cracked Passwords Strength Examples')
+    # st.subheader('Cracked Passwords Strength Examples')
 
-    plot_cracked_passwords_strength_histogram()
+    # plot_cracked_passwords_strength_histogram()
 
     st.subheader('Measuring Average Password Strengts in Clusters')
-    st.write('This section provides insights into the strength of passwords in different clusters based on entropy and n-gram likelihood.')
+    st.write("""
+        This section provides insights into the strength of passwords across different clusters, categorized by entropy and n-gram log-likelihood.
+
+        To evaluate our algorithm, we selected 20 random entropy-based clusters and calculated the average entropy and password strength for each cluster.
+        As expected, we found a strong positive correlation between these metrics, confirming that higher entropy generally leads to more unpredictable and stronger passwords.
+
+        We also analyzed 16 random clusters based on n-gram log-likelihood, where we observed a strong negative correlation. 
+        This shows that passwords with higher log-likelihood scores tend to be weaker and more predictable, 
+        as they follow common patterns or linguistic structures that are easier to guess.
+    """)
 
     plot_strength_of_entropy_clusters()
 
