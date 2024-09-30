@@ -100,7 +100,7 @@ def plot_ascii_character_usage(loaded_statistics):
 
     # Update layout for better visualization
     fig_ascii.update_layout(
-        xaxis_tickangle=-90,
+        xaxis_tickangle=0,
         xaxis=dict(dtick=1)
     )
 
