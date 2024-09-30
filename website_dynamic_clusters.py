@@ -1,7 +1,6 @@
 import streamlit as st
 import json
 import plotly.express as px
-import plotly.graph_objs as go
 import pandas as pd
 from password_statistics import calculate_entropy
 from datasketch import MinHash

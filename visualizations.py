@@ -1,13 +1,9 @@
-from collections import defaultdict
-
-from tqdm import tqdm
 import password_statistics as ps
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import os
 import numpy as np
-import string
 import pickle
 import password_statistics as ps
 

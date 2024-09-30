@@ -1,10 +1,7 @@
 import streamlit as st
 import json
 import plotly.express as px
-import plotly.graph_objects as go
 import pandas as pd
-import numpy as np
-import re
 from website_static_clusters import static_clusters_page
 
 def load_data(filename):

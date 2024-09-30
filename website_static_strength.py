@@ -3,9 +3,7 @@ import json
 import plotly.express as px
 import matplotlib.pyplot as plt
 import pandas as pd
-import plotly.io as pio
 import numpy as np
-import plotly.graph_objects as go
 import os
 from password_strength import calculate_password_strength
 from website_dynamic_strength import dynamic_strength_page
