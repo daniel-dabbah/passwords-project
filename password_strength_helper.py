@@ -1,10 +1,7 @@
 
 import string
 import numpy as np
-import matplotlib.pyplot as plt
 import re
-import plotly.express as px
-import pandas as pd
 
 date_pattern = r'^\b(?:(\d{1,2})([-/.]?)(\d{1,2})(\2(?:\d{2}|\d{4}))?)\b$'
 email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'

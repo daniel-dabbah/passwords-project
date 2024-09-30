@@ -1,13 +1,7 @@
 import json
 import os
-import matplotlib
 from tqdm import tqdm
 import string
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-import matplotlib.colors as mcolors
-import numpy as np
 import re
 import math
 

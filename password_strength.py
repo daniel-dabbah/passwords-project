@@ -1,9 +1,4 @@
-import string
-import numpy as np
-import matplotlib.pyplot as plt
 import re
-import plotly.express as px
-import pandas as pd
 from password_strength_helper import (automatic_deny, almost_deny, give_character_type_score, calc_no_special_password_score,
                                       calc_modified_password_score, remove_pattern)
 
