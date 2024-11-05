@@ -5,7 +5,6 @@
 - **Michael Svitlizky**: [michael.svitlizky@mail.huji.ac.il](mailto:michael.svitlizky@mail.huji.ac.il)
 - **Daniel Dabbah**: [daniel.dabbah@mail.huji.ac.il](mailto:daniel.dabbah@mail.huji.ac.il)
 - **Carmit Yehudai**: [carmitch.yehudai@mail.huji.ac.il](mailto:carmitch.yehudai@mail.huji.ac.il)
-- **Amitai Lerer**: [Amitai.lerrer@mail.huji.ac.il](mailto:Amitai.lerrer@mail.huji.ac.il)
 
 ## Introduction
 In today’s digital landscape, the frequency of data breaches has exposed the vulnerability of commonly used passwords. Weak and predictable passwords can be exploited by attackers using brute-force techniques or dictionaries of popular passwords. Our project addresses this by creating an **interactive password analysis dashboard** that helps users evaluate their password strength using advanced entropy calculations, clustering algorithms, and statistical models. The dashboard provides **real-time feedback** and actionable recommendations, helping users create stronger, more secure passwords.
